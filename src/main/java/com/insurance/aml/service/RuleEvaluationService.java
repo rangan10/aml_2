@@ -2,8 +2,11 @@ package com.insurance.aml.service;
 
 import com.insurance.aml.dto.RuleEvaluationResult;
 import com.insurance.aml.entity.AmlAlert;
+import com.insurance.aml.entity.AmlQuestionResponse;
 import com.insurance.aml.entity.Customer;
 import com.insurance.aml.entity.Policy;
+import com.insurance.aml.repository.AmlQuestionResponseRepository;
+import com.insurance.aml.repository.AmlQuestionnaireResponseRepository;
 import com.insurance.aml.repository.PolicyRepository;
 import com.insurance.aml.ruleengine.RuleContext;
 import com.insurance.aml.ruleengine.RuleEngineExecutor;
@@ -13,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Ties the {@link RuleEngineExecutor} together with alert persistence.
@@ -28,6 +33,8 @@ public class RuleEvaluationService {
     private final RuleEngineExecutor ruleEngineExecutor;
     private final AmlAlertService amlAlertService;
     private final PolicyRepository policyRepository;
+    private final AmlQuestionnaireResponseRepository questionnaireResponseRepository;
+    private final AmlQuestionResponseRepository questionResponseRepository;
 
     /**
      * Evaluates all rules for a single policy and persists any resulting alerts.
@@ -39,7 +46,12 @@ public class RuleEvaluationService {
                 .orElseThrow(() -> new IllegalArgumentException("Policy not found: " + policyId));
 
         Customer customer = policy.getCustomer();
-        RuleContext context = RuleContext.builder().customer(customer).policy(policy).build();
+        Map<String, String> questionnaireAnswers = loadLatestQuestionnaireAnswers(customer.getCustomerId());
+        RuleContext context = RuleContext.builder()
+                .customer(customer)
+                .policy(policy)
+                .questionnaireAnswers(questionnaireAnswers)
+                .build();
 
         List<RuleEvaluationResult> triggered = ruleEngineExecutor.evaluateAll(context);
 
@@ -47,6 +59,24 @@ public class RuleEvaluationService {
                 .map(result -> amlAlertService.createAlertIfNotDuplicate(customer, policy, result))
                 .filter(alert -> alert != null)
                 .toList();
+    }
+
+    /**
+     * Loads the answers from the customer's most recently submitted
+     * questionnaire response, keyed by question code, for rules that need to
+     * factor questionnaire-driven risk signals (e.g. self-declared PEP
+     * status) into their evaluation.
+     */
+    private Map<String, String> loadLatestQuestionnaireAnswers(Long customerId) {
+        return questionnaireResponseRepository.findTopByCustomer_CustomerIdOrderByCreatedAtDesc(customerId)
+                .map(response -> questionResponseRepository.findByResponse_ResponseId(response.getResponseId())
+                        .stream()
+                        .filter(qr -> qr.getAnswerText() != null)
+                        .collect(Collectors.toMap(
+                                qr -> qr.getQuestion().getQuestionCode(),
+                                AmlQuestionResponse::getAnswerText,
+                                (a, b) -> a)))
+                .orElse(Map.of());
     }
 
     /**

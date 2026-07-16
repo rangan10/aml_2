@@ -29,6 +29,26 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, ex.getMessage(), req, null);
     }
 
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicate(DuplicateResourceException ex, HttpServletRequest req) {
+        log.warn("Duplicate resource: {}", ex.getMessage());
+        return build(HttpStatus.CONFLICT, ex.getMessage(), req, null);
+    }
+
+    @ExceptionHandler(InvalidQuestionnaireStateException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidQuestionnaireState(InvalidQuestionnaireStateException ex,
+                                                                          HttpServletRequest req) {
+        log.warn("Invalid questionnaire state: {}", ex.getMessage());
+        return build(HttpStatus.CONFLICT, ex.getMessage(), req, null);
+    }
+
+    @ExceptionHandler(MandatoryQuestionMissingException.class)
+    public ResponseEntity<ErrorResponse> handleMandatoryQuestionMissing(MandatoryQuestionMissingException ex,
+                                                                         HttpServletRequest req) {
+        log.warn("Mandatory question missing: {}", ex.getMessage());
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req, null);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex,
                                                            HttpServletRequest req) {

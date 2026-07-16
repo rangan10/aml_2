@@ -1,0 +1,4 @@
+com\insurance\aml\ruleengine\Aml003RuleTest.class
+com\insurance\aml\service\RiskCategorizationServiceTest.class
+com\insurance\aml\ruleengine\Aml004RuleTest.class
+com\insurance\aml\ruleengine\Aml006RuleTest.class

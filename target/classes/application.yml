@@ -6,7 +6,7 @@ spring:
     name: aml-module
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/aml_db
+    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=aml_db
     username: aml_user
     password: aml_pass
     driver-class-name: org.postgresql.Driver

@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Map;
+
 /**
  * Input context passed to every AmlRule evaluation.
  * A rule may be evaluated at the customer level, the policy level, or both,
@@ -25,4 +27,16 @@ public class RuleContext {
 
     /** Policy being evaluated, if the rule is policy-scoped. May be null for pure customer-level checks. */
     private Policy policy;
+
+    /**
+     * Answers from the customer's latest submitted questionnaire response,
+     * keyed by question code. Empty if no response has been submitted yet.
+     */
+    @Builder.Default
+    private Map<String, String> questionnaireAnswers = Map.of();
+
+    /** Convenience accessor for a single questionnaire answer by question code. */
+    public String getQuestionnaireAnswer(String questionCode) {
+        return questionnaireAnswers.get(questionCode);
+    }
 }
