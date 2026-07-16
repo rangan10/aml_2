@@ -1,0 +1,71 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: aml-module
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/aml_db
+    username: aml_user
+    password: aml_pass
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+    show-sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+aml:
+  rules:
+    aml003:
+      sum-insured-multiplier: 10
+      premium-multiplier: 5
+    aml004:
+      cash-dd-threshold: 50000
+      monthly-count-threshold: 3
+      monthly-amount-threshold: 500000
+      yearly-count-threshold: 21
+      yearly-amount-threshold: 5000000
+    aml005:
+      cancellation-count-threshold: 3
+      window-days: 30
+    aml006:
+      premium-threshold: 50000
+      refund-threshold: 50000
+    aml007:
+      sum-insured-threshold: 10000000
+      premium-threshold: 100000
+    aml008:
+      notification-change-count: 2
+      alert-change-count: 3
+    aml009:
+      overpayment-refund-threshold: 10000
+    aml015:
+      claim-threshold: 1000000
+    aml016:
+      claim-threshold: 10000000
+    aml017:
+      nominee-change-threshold: 2
+      assignee-change-threshold: 2
+    aml018:
+      premium-threshold: 200000
+    aml019:
+      premium-threshold: 500000
+  scheduler:
+    cron: "0 0 2 * * *"
+
+logging:
+  level:
+    com.insurance.aml: INFO
