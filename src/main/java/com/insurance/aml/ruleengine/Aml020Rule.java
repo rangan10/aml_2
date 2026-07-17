@@ -1,7 +1,7 @@
 package com.insurance.aml.ruleengine;
 
 import com.insurance.aml.dto.RuleEvaluationResult;
-import com.insurance.aml.entity.AlertSeverity;
+import com.insurance.aml.enums.AlertSeverity;
 import org.springframework.stereotype.Component;
 
 /**

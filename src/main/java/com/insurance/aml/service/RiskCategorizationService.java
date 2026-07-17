@@ -1,8 +1,8 @@
 package com.insurance.aml.service;
 
 import com.insurance.aml.entity.Customer;
-import com.insurance.aml.entity.OccupationType;
-import com.insurance.aml.entity.RiskCategory;
+import com.insurance.aml.enums.OccupationType;
+import com.insurance.aml.enums.RiskCategory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

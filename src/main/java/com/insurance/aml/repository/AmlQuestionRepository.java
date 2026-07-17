@@ -1,6 +1,7 @@
 package com.insurance.aml.repository;
 
 import com.insurance.aml.entity.AmlQuestion;
+import com.insurance.aml.enums.QuestionCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -15,4 +16,8 @@ public interface AmlQuestionRepository extends JpaRepository<AmlQuestion, Long> 
     List<AmlQuestion> findByTenantIsNull();
 
     List<AmlQuestion> findByTenant_TenantId(Long tenantId);
+
+    List<AmlQuestion> findByTenantIsNullAndCategory(QuestionCategory category);
+
+    List<AmlQuestion> findByTenant_TenantIdAndCategory(Long tenantId, QuestionCategory category);
 }

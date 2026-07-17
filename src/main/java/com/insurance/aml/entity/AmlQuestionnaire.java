@@ -1,5 +1,6 @@
 package com.insurance.aml.entity;
 
+import com.insurance.aml.enums.QuestionnaireStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,10 +14,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A single immutable version of a tenant's questionnaire. Structural changes
+ * A single immutable version of a shared questionnaire template. Any number
+ * of tenants may adopt a given version via {@link AmlQuestionnaireTenant};
+ * each tenant's own question configuration (mandatory/order/conditional rule)
+ * is tracked separately in {@link AmlTenantQuestionnaire}. Structural changes
  * (add/remove/modify question) create a new version once responses already
  * exist against the current one, so {@link AmlQuestionnaireResponse} rows
- * keep pointing at the exact version they were answered against.
+ * keep pointing at the exact version they were answered against; all tenants
+ * assigned to the current version move to the new one together.
  */
 @Entity
 @Table(name = "aml_questionnaire")
@@ -31,10 +36,6 @@ public class AmlQuestionnaire {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "questionnaire_id")
     private Long questionnaireId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", nullable = false)
-    private Tenant tenant;
 
     @Column(name = "questionnaire_code", nullable = false, length = 50)
     private String questionnaireCode;
@@ -71,6 +72,10 @@ public class AmlQuestionnaire {
     @Builder.Default
     @OneToMany(mappedBy = "questionnaire", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<AmlTenantQuestionnaire> questions = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "questionnaire", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<AmlQuestionnaireTenant> tenantAssignments = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

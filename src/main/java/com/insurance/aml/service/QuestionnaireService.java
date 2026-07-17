@@ -13,8 +13,9 @@ import com.insurance.aml.dto.QuestionnaireQuestionDto;
 import com.insurance.aml.entity.AmlQuestion;
 import com.insurance.aml.entity.AmlQuestionOption;
 import com.insurance.aml.entity.AmlQuestionnaire;
+import com.insurance.aml.entity.AmlQuestionnaireTenant;
 import com.insurance.aml.entity.AmlTenantQuestionnaire;
-import com.insurance.aml.entity.QuestionnaireStatus;
+import com.insurance.aml.enums.QuestionnaireStatus;
 import com.insurance.aml.entity.Tenant;
 import com.insurance.aml.exception.DuplicateResourceException;
 import com.insurance.aml.exception.ResourceNotFoundException;
@@ -22,6 +23,7 @@ import com.insurance.aml.repository.AmlQuestionOptionRepository;
 import com.insurance.aml.repository.AmlQuestionRepository;
 import com.insurance.aml.repository.AmlQuestionnaireRepository;
 import com.insurance.aml.repository.AmlQuestionnaireResponseRepository;
+import com.insurance.aml.repository.AmlQuestionnaireTenantRepository;
 import com.insurance.aml.repository.AmlTenantQuestionnaireRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,12 +32,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * Manages tenant-owned questionnaires: creation, attaching/removing/reconfiguring
- * questions, and the version-history mechanics. A structural change to an
+ * Manages shared questionnaire templates: creation, tenant adoption,
+ * attaching/removing/reconfiguring questions, and the version-history
+ * mechanics. A questionnaire is a tenant-agnostic definition (see
+ * {@link AmlQuestionnaire}); {@link AmlQuestionnaireTenant} rows track which
+ * tenants have adopted it, and {@link AmlTenantQuestionnaire} rows carry each
+ * tenant's own configuration for its questions. A structural change to an
  * existing questionnaire mutates it in place until customer responses have
  * been recorded against it; from that point on, structural changes create a
- * new version so historical responses keep referencing the exact version
- * they were answered against.
+ * new version, and every tenant currently assigned to the old version moves
+ * to the new one together, so historical responses keep referencing the
+ * exact version they were answered against.
  */
 @Service
 @RequiredArgsConstructor
@@ -46,6 +53,7 @@ public class QuestionnaireService {
     private final AmlQuestionRepository questionRepository;
     private final AmlQuestionOptionRepository questionOptionRepository;
     private final AmlTenantQuestionnaireRepository tenantQuestionnaireRepository;
+    private final AmlQuestionnaireTenantRepository questionnaireTenantRepository;
     private final AmlQuestionnaireResponseRepository questionnaireResponseRepository;
     private final TenantService tenantService;
     private final ObjectMapper objectMapper;
@@ -53,8 +61,8 @@ public class QuestionnaireService {
     public QuestionnaireDto createQuestionnaire(Long tenantId, CreateQuestionnaireRequest request) {
         Tenant tenant = tenantService.findTenantOrThrow(tenantId);
 
-        if (questionnaireRepository.findTopByTenant_TenantIdAndQuestionnaireCodeOrderByVersionDesc(
-                tenantId, request.getQuestionnaireCode()).isPresent()) {
+        if (questionnaireRepository.findTopByQuestionnaireCodeOrderByVersionDesc(
+                request.getQuestionnaireCode()).isPresent()) {
             throw DuplicateResourceException.forField(
                     "Questionnaire", "questionnaireCode", request.getQuestionnaireCode());
         }
@@ -63,7 +71,6 @@ public class QuestionnaireService {
         }
 
         AmlQuestionnaire questionnaire = AmlQuestionnaire.builder()
-                .tenant(tenant)
                 .questionnaireCode(request.getQuestionnaireCode())
                 .name(request.getName())
                 .description(request.getDescription())
@@ -74,46 +81,75 @@ public class QuestionnaireService {
                 .build();
         questionnaire = questionnaireRepository.save(questionnaire);
 
+        questionnaireTenantRepository.save(AmlQuestionnaireTenant.builder()
+                .questionnaire(questionnaire)
+                .tenant(tenant)
+                .build());
+
         if (request.getQuestions() != null) {
             for (AddQuestionRequest questionRequest : request.getQuestions()) {
                 attachQuestion(tenant, questionnaire, questionRequest);
             }
         }
 
-        return toDto(questionnaire);
+        return toDto(questionnaire, tenantId);
+    }
+
+    /**
+     * Adopts an existing shared questionnaire (created by any tenant) for
+     * {@code tenantId}, so it shows up in that tenant's questionnaire list
+     * and can be configured with its own question set.
+     */
+    public QuestionnaireDto assignQuestionnaire(Long tenantId, Long questionnaireId) {
+        Tenant tenant = tenantService.findTenantOrThrow(tenantId);
+        AmlQuestionnaire questionnaire = questionnaireRepository.findById(questionnaireId)
+                .orElseThrow(() -> ResourceNotFoundException.forEntity("Questionnaire", questionnaireId));
+
+        if (questionnaireTenantRepository.existsByQuestionnaire_QuestionnaireIdAndTenant_TenantId(
+                questionnaireId, tenantId)) {
+            throw DuplicateResourceException.forField(
+                    "QuestionnaireTenant", "questionnaireId", String.valueOf(questionnaireId));
+        }
+
+        questionnaireTenantRepository.save(AmlQuestionnaireTenant.builder()
+                .questionnaire(questionnaire)
+                .tenant(tenant)
+                .build());
+
+        return toDto(questionnaire, tenantId);
     }
 
     public QuestionnaireDto addQuestion(Long tenantId, Long questionnaireId, AddQuestionRequest request) {
         Tenant tenant = tenantService.findTenantOrThrow(tenantId);
         AmlQuestionnaire current = findQuestionnaireOrThrow(tenantId, questionnaireId);
 
-        AmlQuestionnaire target = prepareTargetVersion(tenant, current);
+        AmlQuestionnaire target = prepareTargetVersion(current);
         attachQuestion(tenant, target, request);
 
-        return toDto(reload(target.getQuestionnaireId()));
+        return toDto(reload(target.getQuestionnaireId()), tenantId);
     }
 
     public QuestionnaireDto removeQuestion(Long tenantId, Long questionnaireId, Long questionId) {
-        Tenant tenant = tenantService.findTenantOrThrow(tenantId);
         AmlQuestionnaire current = findQuestionnaireOrThrow(tenantId, questionnaireId);
-        AmlQuestionnaire target = prepareTargetVersion(tenant, current);
+        AmlQuestionnaire target = prepareTargetVersion(current);
 
         AmlTenantQuestionnaire mapping = tenantQuestionnaireRepository
-                .findByQuestionnaire_QuestionnaireIdAndQuestion_QuestionId(target.getQuestionnaireId(), questionId)
+                .findByTenant_TenantIdAndQuestionnaire_QuestionnaireIdAndQuestion_QuestionId(
+                        tenantId, target.getQuestionnaireId(), questionId)
                 .orElseThrow(() -> ResourceNotFoundException.forEntity("QuestionnaireQuestion", questionId));
         tenantQuestionnaireRepository.delete(mapping);
 
-        return toDto(reload(target.getQuestionnaireId()));
+        return toDto(reload(target.getQuestionnaireId()), tenantId);
     }
 
     public QuestionnaireDto modifyQuestionConfig(Long tenantId, Long questionnaireId, Long questionId,
                                                   ModifyQuestionConfigRequest request) {
-        Tenant tenant = tenantService.findTenantOrThrow(tenantId);
         AmlQuestionnaire current = findQuestionnaireOrThrow(tenantId, questionnaireId);
-        AmlQuestionnaire target = prepareTargetVersion(tenant, current);
+        AmlQuestionnaire target = prepareTargetVersion(current);
 
         AmlTenantQuestionnaire mapping = tenantQuestionnaireRepository
-                .findByQuestionnaire_QuestionnaireIdAndQuestion_QuestionId(target.getQuestionnaireId(), questionId)
+                .findByTenant_TenantIdAndQuestionnaire_QuestionnaireIdAndQuestion_QuestionId(
+                        tenantId, target.getQuestionnaireId(), questionId)
                 .orElseThrow(() -> ResourceNotFoundException.forEntity("QuestionnaireQuestion", questionId));
 
         mapping.setMandatory(Boolean.TRUE.equals(request.getMandatory()));
@@ -121,41 +157,47 @@ public class QuestionnaireService {
         mapping.setConditionalRule(serializeConditionalRule(request.getConditionalRule()));
         tenantQuestionnaireRepository.save(mapping);
 
-        return toDto(reload(target.getQuestionnaireId()));
+        return toDto(reload(target.getQuestionnaireId()), tenantId);
     }
 
     @Transactional(readOnly = true)
     public List<QuestionnaireDto> getQuestionnaires(Long tenantId) {
         tenantService.findTenantOrThrow(tenantId);
-        return questionnaireRepository.findByTenant_TenantIdAndStatusNot(tenantId, QuestionnaireStatus.INACTIVE)
-                .stream().map(this::toDto).toList();
+        return questionnaireTenantRepository.findByTenant_TenantId(tenantId).stream()
+                .map(AmlQuestionnaireTenant::getQuestionnaire)
+                .filter(q -> q.getStatus() != QuestionnaireStatus.INACTIVE)
+                .map(q -> toDto(q, tenantId))
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public QuestionnaireDto getQuestionnaire(Long tenantId, Long questionnaireId) {
-        return toDto(findQuestionnaireOrThrow(tenantId, questionnaireId));
+        return toDto(findQuestionnaireOrThrow(tenantId, questionnaireId), tenantId);
     }
 
     AmlQuestionnaire findQuestionnaireOrThrow(Long tenantId, Long questionnaireId) {
-        return questionnaireRepository.findByQuestionnaireIdAndTenant_TenantId(questionnaireId, tenantId)
+        return questionnaireTenantRepository.findByQuestionnaire_QuestionnaireIdAndTenant_TenantId(
+                        questionnaireId, tenantId)
+                .map(AmlQuestionnaireTenant::getQuestionnaire)
                 .orElseThrow(() -> ResourceNotFoundException.forEntity("Questionnaire", questionnaireId));
     }
 
     /**
      * Returns a version of the questionnaire that is safe to mutate: the
      * current one if no responses reference it yet, otherwise a freshly
-     * cloned next version (with the current one retired to INACTIVE).
+     * cloned next version (with the current one retired to INACTIVE). Since
+     * a questionnaire is shared, every tenant assigned to the current
+     * version moves to the next version together.
      */
-    private AmlQuestionnaire prepareTargetVersion(Tenant tenant, AmlQuestionnaire current) {
+    private AmlQuestionnaire prepareTargetVersion(AmlQuestionnaire current) {
         if (!questionnaireResponseRepository.existsByQuestionnaire_QuestionnaireId(current.getQuestionnaireId())) {
             return current;
         }
-        return createNextVersion(tenant, current);
+        return createNextVersion(current);
     }
 
-    private AmlQuestionnaire createNextVersion(Tenant tenant, AmlQuestionnaire current) {
+    private AmlQuestionnaire createNextVersion(AmlQuestionnaire current) {
         AmlQuestionnaire nextVersion = AmlQuestionnaire.builder()
-                .tenant(tenant)
                 .questionnaireCode(current.getQuestionnaireCode())
                 .name(current.getName())
                 .description(current.getDescription())
@@ -181,6 +223,13 @@ public class QuestionnaireService {
             tenantQuestionnaireRepository.save(cloned);
         }
 
+        List<AmlQuestionnaireTenant> assignments = questionnaireTenantRepository
+                .findByQuestionnaire_QuestionnaireId(current.getQuestionnaireId());
+        for (AmlQuestionnaireTenant assignment : assignments) {
+            assignment.setQuestionnaire(nextVersion);
+            questionnaireTenantRepository.save(assignment);
+        }
+
         current.setStatus(QuestionnaireStatus.INACTIVE);
         questionnaireRepository.save(current);
 
@@ -195,8 +244,8 @@ public class QuestionnaireService {
             throw new IllegalArgumentException("Question " + question.getQuestionCode()
                     + " is tenant-specific to another tenant and cannot be used here");
         }
-        if (tenantQuestionnaireRepository.findByQuestionnaire_QuestionnaireIdAndQuestion_QuestionId(
-                questionnaire.getQuestionnaireId(), question.getQuestionId()).isPresent()) {
+        if (tenantQuestionnaireRepository.findByTenant_TenantIdAndQuestionnaire_QuestionnaireIdAndQuestion_QuestionId(
+                tenant.getTenantId(), questionnaire.getQuestionnaireId(), question.getQuestionId()).isPresent()) {
             throw DuplicateResourceException.forField(
                     "QuestionnaireQuestion", "questionCode", question.getQuestionCode());
         }
@@ -223,9 +272,10 @@ public class QuestionnaireService {
         }
 
         if (isBlank(request.getQuestionCode()) || isBlank(request.getQuestionText())
-                || request.getQuestionType() == null) {
+                || request.getQuestionType() == null || request.getCategory() == null) {
             throw new IllegalArgumentException(
-                    "questionCode, questionText and questionType are required when existingQuestionCode is not set");
+                    "questionCode, questionText, questionType and category are required when "
+                            + "existingQuestionCode is not set");
         }
         if (questionRepository.findByTenantIsNullAndQuestionCode(request.getQuestionCode()).isPresent()
                 || questionRepository.findByTenant_TenantIdAndQuestionCode(
@@ -238,6 +288,7 @@ public class QuestionnaireService {
                 .questionCode(request.getQuestionCode())
                 .questionText(request.getQuestionText())
                 .questionType(request.getQuestionType())
+                .category(request.getCategory())
                 .build();
         question = questionRepository.save(question);
 
@@ -287,9 +338,10 @@ public class QuestionnaireService {
         }
     }
 
-    private QuestionnaireDto toDto(AmlQuestionnaire questionnaire) {
+    private QuestionnaireDto toDto(AmlQuestionnaire questionnaire, Long tenantId) {
         List<AmlTenantQuestionnaire> mappings = tenantQuestionnaireRepository
-                .findByQuestionnaire_QuestionnaireIdOrderByDisplayOrderAsc(questionnaire.getQuestionnaireId());
+                .findByTenant_TenantIdAndQuestionnaire_QuestionnaireIdOrderByDisplayOrderAsc(
+                        tenantId, questionnaire.getQuestionnaireId());
 
         List<QuestionnaireQuestionDto> questionDtos = mappings.stream()
                 .map(this::toQuestionnaireQuestionDto)
@@ -297,7 +349,7 @@ public class QuestionnaireService {
 
         return QuestionnaireDto.builder()
                 .questionnaireId(questionnaire.getQuestionnaireId())
-                .tenantId(questionnaire.getTenant().getTenantId())
+                .tenantId(tenantId)
                 .questionnaireCode(questionnaire.getQuestionnaireCode())
                 .name(questionnaire.getName())
                 .description(questionnaire.getDescription())
@@ -341,6 +393,7 @@ public class QuestionnaireService {
                 .questionText(question.getQuestionText())
                 .questionType(question.getQuestionType())
                 .questionScope(question.getQuestionScope())
+                .category(question.getCategory())
                 .active(question.isActive())
                 .options(options)
                 .build();

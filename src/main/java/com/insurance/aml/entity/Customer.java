@@ -1,5 +1,7 @@
 package com.insurance.aml.entity;
 
+import com.insurance.aml.enums.OccupationType;
+import com.insurance.aml.enums.RiskCategory;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

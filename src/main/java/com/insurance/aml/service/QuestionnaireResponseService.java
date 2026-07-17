@@ -12,20 +12,21 @@ import com.insurance.aml.entity.AmlQuestionOption;
 import com.insurance.aml.entity.AmlQuestionResponse;
 import com.insurance.aml.entity.AmlQuestionnaire;
 import com.insurance.aml.entity.AmlQuestionnaireResponse;
+import com.insurance.aml.entity.AmlQuestionnaireTenant;
 import com.insurance.aml.entity.AmlTenantQuestionnaire;
 import com.insurance.aml.entity.Customer;
 import com.insurance.aml.entity.Policy;
-import com.insurance.aml.entity.QuestionType;
-import com.insurance.aml.entity.QuestionnaireResponseStatus;
-import com.insurance.aml.entity.QuestionnaireStatus;
+import com.insurance.aml.enums.QuestionType;
+import com.insurance.aml.enums.QuestionnaireResponseStatus;
+import com.insurance.aml.enums.QuestionnaireStatus;
 import com.insurance.aml.entity.Tenant;
 import com.insurance.aml.exception.InvalidQuestionnaireStateException;
 import com.insurance.aml.exception.MandatoryQuestionMissingException;
 import com.insurance.aml.exception.ResourceNotFoundException;
 import com.insurance.aml.repository.AmlQuestionOptionRepository;
 import com.insurance.aml.repository.AmlQuestionResponseRepository;
-import com.insurance.aml.repository.AmlQuestionnaireRepository;
 import com.insurance.aml.repository.AmlQuestionnaireResponseRepository;
+import com.insurance.aml.repository.AmlQuestionnaireTenantRepository;
 import com.insurance.aml.repository.AmlTenantQuestionnaireRepository;
 import com.insurance.aml.repository.CustomerRepository;
 import com.insurance.aml.repository.PolicyRepository;
@@ -56,7 +57,7 @@ public class QuestionnaireResponseService {
 
     private final AmlQuestionnaireResponseRepository responseRepository;
     private final AmlQuestionResponseRepository questionResponseRepository;
-    private final AmlQuestionnaireRepository questionnaireRepository;
+    private final AmlQuestionnaireTenantRepository questionnaireTenantRepository;
     private final AmlTenantQuestionnaireRepository tenantQuestionnaireRepository;
     private final AmlQuestionOptionRepository questionOptionRepository;
     private final CustomerRepository customerRepository;
@@ -67,8 +68,9 @@ public class QuestionnaireResponseService {
     public QuestionnaireResponseDto submitResponse(Long tenantId, SubmitQuestionnaireResponseRequest request) {
         Tenant tenant = tenantService.findTenantOrThrow(tenantId);
 
-        AmlQuestionnaire questionnaire = questionnaireRepository
-                .findByQuestionnaireIdAndTenant_TenantId(request.getQuestionnaireId(), tenantId)
+        AmlQuestionnaire questionnaire = questionnaireTenantRepository
+                .findByQuestionnaire_QuestionnaireIdAndTenant_TenantId(request.getQuestionnaireId(), tenantId)
+                .map(AmlQuestionnaireTenant::getQuestionnaire)
                 .orElseThrow(() -> ResourceNotFoundException.forEntity("Questionnaire", request.getQuestionnaireId()));
 
         if (questionnaire.getStatus() == QuestionnaireStatus.INACTIVE) {
@@ -92,7 +94,8 @@ public class QuestionnaireResponseService {
         }
 
         List<AmlTenantQuestionnaire> mappings = tenantQuestionnaireRepository
-                .findByQuestionnaire_QuestionnaireIdOrderByDisplayOrderAsc(questionnaire.getQuestionnaireId());
+                .findByTenant_TenantIdAndQuestionnaire_QuestionnaireIdOrderByDisplayOrderAsc(
+                        tenantId, questionnaire.getQuestionnaireId());
 
         Map<String, AnswerRequest> answersByCode = request.getAnswers().stream()
                 .collect(Collectors.toMap(AnswerRequest::getQuestionCode, a -> a, (a, b) -> a));

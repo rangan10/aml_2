@@ -1,6 +1,6 @@
 package com.insurance.aml.repository;
 
-import com.insurance.aml.entity.PaymentMode;
+import com.insurance.aml.enums.PaymentMode;
 import com.insurance.aml.entity.PaymentTransaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

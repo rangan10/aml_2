@@ -2,8 +2,8 @@ package com.insurance.aml.ruleengine;
 
 import com.insurance.aml.config.AmlRuleProperties;
 import com.insurance.aml.dto.RuleEvaluationResult;
-import com.insurance.aml.entity.AlertSeverity;
-import com.insurance.aml.entity.PaymentMode;
+import com.insurance.aml.enums.AlertSeverity;
+import com.insurance.aml.enums.PaymentMode;
 import com.insurance.aml.entity.PaymentTransaction;
 import com.insurance.aml.entity.Policy;
 import com.insurance.aml.repository.PaymentTransactionRepository;

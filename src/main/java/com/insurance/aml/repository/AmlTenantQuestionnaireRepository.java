@@ -10,6 +10,9 @@ public interface AmlTenantQuestionnaireRepository extends JpaRepository<AmlTenan
 
     List<AmlTenantQuestionnaire> findByQuestionnaire_QuestionnaireIdOrderByDisplayOrderAsc(Long questionnaireId);
 
-    Optional<AmlTenantQuestionnaire> findByQuestionnaire_QuestionnaireIdAndQuestion_QuestionId(
-            Long questionnaireId, Long questionId);
+    List<AmlTenantQuestionnaire> findByTenant_TenantIdAndQuestionnaire_QuestionnaireIdOrderByDisplayOrderAsc(
+            Long tenantId, Long questionnaireId);
+
+    Optional<AmlTenantQuestionnaire> findByTenant_TenantIdAndQuestionnaire_QuestionnaireIdAndQuestion_QuestionId(
+            Long tenantId, Long questionnaireId, Long questionId);
 }

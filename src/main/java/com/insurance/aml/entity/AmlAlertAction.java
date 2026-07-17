@@ -1,5 +1,7 @@
 package com.insurance.aml.entity;
 
+import com.insurance.aml.enums.AlertAction;
+import com.insurance.aml.enums.AlertStage;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

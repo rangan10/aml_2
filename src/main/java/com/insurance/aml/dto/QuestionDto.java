@@ -1,7 +1,8 @@
 package com.insurance.aml.dto;
 
-import com.insurance.aml.entity.QuestionScope;
-import com.insurance.aml.entity.QuestionType;
+import com.insurance.aml.enums.QuestionCategory;
+import com.insurance.aml.enums.QuestionScope;
+import com.insurance.aml.enums.QuestionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -32,6 +33,8 @@ public class QuestionDto {
     private QuestionType questionType;
 
     private QuestionScope questionScope;
+
+    private QuestionCategory category;
 
     private boolean active;
 

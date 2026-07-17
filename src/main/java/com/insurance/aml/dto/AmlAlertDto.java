@@ -1,8 +1,8 @@
 package com.insurance.aml.dto;
 
-import com.insurance.aml.entity.AlertSeverity;
-import com.insurance.aml.entity.AlertStage;
-import com.insurance.aml.entity.AlertStatus;
+import com.insurance.aml.enums.AlertSeverity;
+import com.insurance.aml.enums.AlertStage;
+import com.insurance.aml.enums.AlertStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

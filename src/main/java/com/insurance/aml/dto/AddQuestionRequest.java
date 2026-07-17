@@ -1,6 +1,7 @@
 package com.insurance.aml.dto;
 
-import com.insurance.aml.entity.QuestionType;
+import com.insurance.aml.enums.QuestionCategory;
+import com.insurance.aml.enums.QuestionType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -16,7 +17,8 @@ import java.util.List;
  * Attaches a question to a questionnaire. Set {@code existingQuestionCode} to
  * reuse a question already in the bank (global, or owned by this tenant).
  * Leave it null and populate {@code questionCode}/{@code questionText}/
- * {@code questionType} to create a brand new tenant-specific question inline.
+ * {@code questionType}/{@code category} to create a brand new tenant-specific
+ * question inline.
  */
 @Getter
 @Setter
@@ -32,6 +34,8 @@ public class AddQuestionRequest {
     private String questionText;
 
     private QuestionType questionType;
+
+    private QuestionCategory category;
 
     private List<QuestionOptionDto> options;
 

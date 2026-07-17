@@ -38,6 +38,13 @@ public class QuestionnaireController {
         return ResponseEntity.ok(questionnaireService.getQuestionnaire(tenantId, questionnaireId));
     }
 
+    @PostMapping("/{questionnaireId}/assignments")
+    public ResponseEntity<QuestionnaireDto> assignQuestionnaire(@PathVariable Long tenantId,
+                                                                 @PathVariable Long questionnaireId) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(questionnaireService.assignQuestionnaire(tenantId, questionnaireId));
+    }
+
     @PostMapping("/{questionnaireId}/questions")
     public ResponseEntity<QuestionnaireDto> addQuestion(@PathVariable Long tenantId,
                                                          @PathVariable Long questionnaireId,

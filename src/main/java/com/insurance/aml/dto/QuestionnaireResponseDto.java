@@ -1,6 +1,6 @@
 package com.insurance.aml.dto;
 
-import com.insurance.aml.entity.QuestionnaireResponseStatus;
+import com.insurance.aml.enums.QuestionnaireResponseStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

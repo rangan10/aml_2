@@ -1,5 +1,8 @@
 package com.insurance.aml.entity;
 
+import com.insurance.aml.enums.QuestionCategory;
+import com.insurance.aml.enums.QuestionScope;
+import com.insurance.aml.enums.QuestionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -47,6 +50,10 @@ public class AmlQuestion {
     @Enumerated(EnumType.STRING)
     @Column(name = "question_scope", nullable = false, length = 20)
     private QuestionScope questionScope;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "question_category", nullable = false, length = 20)
+    private QuestionCategory category;
 
     @Column(name = "active", nullable = false)
     private boolean active;

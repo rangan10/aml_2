@@ -2,7 +2,7 @@ package com.insurance.aml.controller;
 
 import com.insurance.aml.dto.AlertActionRequest;
 import com.insurance.aml.dto.AmlAlertDto;
-import com.insurance.aml.entity.AlertStatus;
+import com.insurance.aml.enums.AlertStatus;
 import com.insurance.aml.service.AlertWorkflowService;
 import com.insurance.aml.service.AmlAlertService;
 import com.insurance.aml.service.RuleEvaluationService;

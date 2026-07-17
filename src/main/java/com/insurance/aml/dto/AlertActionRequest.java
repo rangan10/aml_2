@@ -1,6 +1,6 @@
 package com.insurance.aml.dto;
 
-import com.insurance.aml.entity.AlertAction;
+import com.insurance.aml.enums.AlertAction;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

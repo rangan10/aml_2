@@ -1,7 +1,7 @@
 package com.insurance.aml.dto;
 
-import com.insurance.aml.entity.OccupationType;
-import com.insurance.aml.entity.RiskCategory;
+import com.insurance.aml.enums.OccupationType;
+import com.insurance.aml.enums.RiskCategory;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

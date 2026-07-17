@@ -1,6 +1,6 @@
 package com.insurance.aml.dto;
 
-import com.insurance.aml.entity.AlertSeverity;
+import com.insurance.aml.enums.AlertSeverity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

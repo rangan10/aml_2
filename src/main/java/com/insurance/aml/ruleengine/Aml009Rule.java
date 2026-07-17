@@ -2,9 +2,9 @@ package com.insurance.aml.ruleengine;
 
 import com.insurance.aml.config.AmlRuleProperties;
 import com.insurance.aml.dto.RuleEvaluationResult;
-import com.insurance.aml.entity.AlertSeverity;
+import com.insurance.aml.enums.AlertSeverity;
 import com.insurance.aml.entity.Policy;
-import com.insurance.aml.entity.RefundReason;
+import com.insurance.aml.enums.RefundReason;
 import com.insurance.aml.entity.RefundTransaction;
 import com.insurance.aml.repository.RefundTransactionRepository;
 import lombok.RequiredArgsConstructor;

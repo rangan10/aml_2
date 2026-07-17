@@ -1,6 +1,6 @@
 package com.insurance.aml.repository;
 
-import com.insurance.aml.entity.AlertStatus;
+import com.insurance.aml.enums.AlertStatus;
 import com.insurance.aml.entity.AmlAlert;
 import org.springframework.data.jpa.repository.JpaRepository;
 
