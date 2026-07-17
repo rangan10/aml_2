@@ -175,8 +175,8 @@ WHERE q.question_code = 'HYPOTHECATION_STATUS';
 INSERT INTO aml_tenant_questionnaire (tenant_id, questionnaire_id, question_id, mandatory, display_order, conditional_rule)
 SELECT t.tenant_id, qn.questionnaire_id, q.question_id, v.mandatory, v.display_order, v.conditional_rule
 FROM tenant t
-JOIN aml_questionnaire qn ON qn.tenant_id = t.tenant_id AND qn.questionnaire_code = 'AML_RISK_ASSESSMENT' AND qn.version = 1,
-     (VALUES
+JOIN aml_questionnaire qn ON qn.tenant_id = t.tenant_id AND qn.questionnaire_code = 'AML_RISK_ASSESSMENT' AND qn.version = 1
+CROSS JOIN (VALUES
         ('EMPLOYMENT_TYPE',                TRUE,  1,  NULL::text),
         ('COUNTRY_OF_RESIDENCE',           TRUE,  2,  NULL),
         ('NRI_FLAG',                       TRUE,  3,  NULL),

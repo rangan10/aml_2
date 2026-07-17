@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ClaudeCodeEditorTabs">
-    <option name="activeSessionId" value="dba28b79-d027-48fc-ba89-37921ca66754" />
+    <option name="activeSessionId" value="538c15ba-33f2-40ed-bcaa-d5427124a402" />
     <option name="openSessionIds">
       <list>
         <option value="d408336f-88bb-4b57-96b4-244592a5ee1c" />
-        <option value="dba28b79-d027-48fc-ba89-37921ca66754" />
+        <option value="538c15ba-33f2-40ed-bcaa-d5427124a402" />
       </list>
     </option>
     <option name="sessionPaths">
       <map>
+        <entry key="538c15ba-33f2-40ed-bcaa-d5427124a402" value="/sessions/46ce6f1a-68b0-4123-898d-468cb4aa9437" />
         <entry key="d408336f-88bb-4b57-96b4-244592a5ee1c" value="/sessions/abe939f5-e459-4f1a-b2fb-78e393209b60" />
-        <entry key="dba28b79-d027-48fc-ba89-37921ca66754" value="/sessions/7f4a145f-4d0a-4dc3-8d6b-7ae0a6ae1f76" />
       </map>
     </option>
     <option name="sessionTitles">
       <map>
+        <entry key="538c15ba-33f2-40ed-bcaa-d5427124a402" value="Error starting ApplicationContext. To display the" />
         <entry key="d408336f-88bb-4b57-96b4-244592a5ee1c" value="Enhance the existing AML Questionnaire module to s" />
-        <entry key="dba28b79-d027-48fc-ba89-37921ca66754" value="can you insert all questions which you think shoul" />
       </map>
     </option>
   </component>

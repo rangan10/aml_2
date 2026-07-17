@@ -4,5 +4,9 @@ public enum QuestionCategory {
     KYC,
     EMP,
     POLICY,
-    QUOTATION
+    QUOTATION,
+    PROFILE,
+    DOCUMENT,
+    NOMINEE,
+    PAYMENT
 }

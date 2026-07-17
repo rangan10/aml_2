@@ -3,7 +3,7 @@
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
     <include file="db/changelog/changes/001-init-schema.sql" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/002-questionnaire-schema.sql" relativeToChangelogFile="false"/>
@@ -11,5 +11,6 @@
     <include file="db/changelog/changes/004-seed-kshema-aml-questionnaire.sql" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/005-questionnaire-tenant-many-to-many.sql" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/006-add-question-category.sql" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/007-reclassify-question-categories.sql" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

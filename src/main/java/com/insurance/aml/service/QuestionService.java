@@ -16,8 +16,9 @@ import java.util.List;
 /**
  * Browses the question bank available to a tenant: global questions plus the
  * tenant's own tenant-specific questions, optionally filtered by category
- * (e.g. KYC, EMP, POLICY, QUOTATION) so callers can fetch just the questions
- * relevant to a given stage of the workflow.
+ * (e.g. KYC, EMP, POLICY, QUOTATION, PROFILE, DOCUMENT, NOMINEE, PAYMENT) so
+ * callers can fetch just the questions relevant to a given stage of the
+ * workflow.
  */
 @Service
 @RequiredArgsConstructor
