@@ -21,8 +21,9 @@ public class QuestionController {
     private final QuestionService questionService;
 
     @GetMapping
-    public ResponseEntity<List<QuestionDto>> getQuestions(@PathVariable Long tenantId,
-                                                            @RequestParam(required = false) QuestionCategory category) {
-        return ResponseEntity.ok(questionService.getQuestions(tenantId, category));
+    public ResponseEntity<List<QuestionDto>> getQuestions(
+            @PathVariable Long tenantId,
+            @RequestParam(name = "question_category", required = false) QuestionCategory questionCategory) {
+        return ResponseEntity.ok(questionService.getQuestions(tenantId, questionCategory));
     }
 }

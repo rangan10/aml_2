@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface AmlQuestionnaireResponseRepository extends JpaRepository<AmlQuestionnaireResponse, Long> {
 
-    boolean existsByQuestionnaire_QuestionnaireId(Long questionnaireId);
+    boolean existsByQuestionnaireTenant_QuestionnaireTenantId(Long questionnaireTenantId);
 
     List<AmlQuestionnaireResponse> findByTenant_TenantIdAndCustomer_CustomerId(Long tenantId, Long customerId);
 

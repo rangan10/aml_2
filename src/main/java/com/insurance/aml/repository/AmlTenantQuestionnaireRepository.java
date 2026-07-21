@@ -8,11 +8,9 @@ import java.util.Optional;
 
 public interface AmlTenantQuestionnaireRepository extends JpaRepository<AmlTenantQuestionnaire, Long> {
 
-    List<AmlTenantQuestionnaire> findByQuestionnaire_QuestionnaireIdOrderByDisplayOrderAsc(Long questionnaireId);
+    List<AmlTenantQuestionnaire> findByQuestionnaireTenant_QuestionnaireTenantIdOrderByDisplayOrderAsc(
+            Long questionnaireTenantId);
 
-    List<AmlTenantQuestionnaire> findByTenant_TenantIdAndQuestionnaire_QuestionnaireIdOrderByDisplayOrderAsc(
-            Long tenantId, Long questionnaireId);
-
-    Optional<AmlTenantQuestionnaire> findByTenant_TenantIdAndQuestionnaire_QuestionnaireIdAndQuestion_QuestionId(
-            Long tenantId, Long questionnaireId, Long questionId);
+    Optional<AmlTenantQuestionnaire> findByQuestionnaireTenant_QuestionnaireTenantIdAndQuestion_QuestionId(
+            Long questionnaireTenantId, Long questionId);
 }

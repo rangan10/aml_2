@@ -10,7 +10,6 @@ import com.insurance.aml.dto.SubmitQuestionnaireResponseRequest;
 import com.insurance.aml.entity.AmlQuestion;
 import com.insurance.aml.entity.AmlQuestionOption;
 import com.insurance.aml.entity.AmlQuestionResponse;
-import com.insurance.aml.entity.AmlQuestionnaire;
 import com.insurance.aml.entity.AmlQuestionnaireResponse;
 import com.insurance.aml.entity.AmlQuestionnaireTenant;
 import com.insurance.aml.entity.AmlTenantQuestionnaire;
@@ -68,20 +67,16 @@ public class QuestionnaireResponseService {
     public QuestionnaireResponseDto submitResponse(Long tenantId, SubmitQuestionnaireResponseRequest request) {
         Tenant tenant = tenantService.findTenantOrThrow(tenantId);
 
-        AmlQuestionnaire questionnaire = questionnaireTenantRepository
-                .findByQuestionnaire_QuestionnaireIdAndTenant_TenantId(request.getQuestionnaireId(), tenantId)
-                .map(AmlQuestionnaireTenant::getQuestionnaire)
+        AmlQuestionnaireTenant instance = questionnaireTenantRepository
+                .findByQuestionnaire_QuestionnaireIdAndTenant_TenantIdAndStatus(
+                        request.getQuestionnaireId(), tenantId, QuestionnaireStatus.ACTIVE)
                 .orElseThrow(() -> ResourceNotFoundException.forEntity("Questionnaire", request.getQuestionnaireId()));
 
-        if (questionnaire.getStatus() == QuestionnaireStatus.INACTIVE) {
-            throw new InvalidQuestionnaireStateException("Questionnaire " + questionnaire.getQuestionnaireCode()
-                    + " version " + questionnaire.getVersion() + " is no longer active");
-        }
         LocalDate today = LocalDate.now();
-        if (today.isBefore(questionnaire.getEffectiveFrom())
-                || (questionnaire.getEffectiveTo() != null && today.isAfter(questionnaire.getEffectiveTo()))) {
-            throw new InvalidQuestionnaireStateException(
-                    "Questionnaire " + questionnaire.getQuestionnaireCode() + " is not effective today");
+        if (today.isBefore(instance.getEffectiveFrom())
+                || (instance.getEffectiveTo() != null && today.isAfter(instance.getEffectiveTo()))) {
+            throw new InvalidQuestionnaireStateException("Questionnaire "
+                    + instance.getQuestionnaire().getQuestionnaireCode() + " is not effective today");
         }
 
         Customer customer = customerRepository.findById(request.getCustomerId())
@@ -94,8 +89,8 @@ public class QuestionnaireResponseService {
         }
 
         List<AmlTenantQuestionnaire> mappings = tenantQuestionnaireRepository
-                .findByTenant_TenantIdAndQuestionnaire_QuestionnaireIdOrderByDisplayOrderAsc(
-                        tenantId, questionnaire.getQuestionnaireId());
+                .findByQuestionnaireTenant_QuestionnaireTenantIdOrderByDisplayOrderAsc(
+                        instance.getQuestionnaireTenantId());
 
         Map<String, AnswerRequest> answersByCode = request.getAnswers().stream()
                 .collect(Collectors.toMap(AnswerRequest::getQuestionCode, a -> a, (a, b) -> a));
@@ -104,7 +99,7 @@ public class QuestionnaireResponseService {
 
         AmlQuestionnaireResponse response = AmlQuestionnaireResponse.builder()
                 .tenant(tenant)
-                .questionnaire(questionnaire)
+                .questionnaireTenant(instance)
                 .customer(customer)
                 .policy(policy)
                 .status(QuestionnaireResponseStatus.SUBMITTED)
@@ -217,12 +212,13 @@ public class QuestionnaireResponseService {
                 .map(this::toQuestionAnswerDto)
                 .toList();
 
+        AmlQuestionnaireTenant instance = response.getQuestionnaireTenant();
         return QuestionnaireResponseDto.builder()
                 .responseId(response.getResponseId())
                 .tenantId(response.getTenant().getTenantId())
-                .questionnaireId(response.getQuestionnaire().getQuestionnaireId())
-                .questionnaireCode(response.getQuestionnaire().getQuestionnaireCode())
-                .version(response.getQuestionnaire().getVersion())
+                .questionnaireId(instance.getQuestionnaire().getQuestionnaireId())
+                .questionnaireCode(instance.getQuestionnaire().getQuestionnaireCode())
+                .version(instance.getVersion())
                 .customerId(response.getCustomer().getCustomerId())
                 .policyId(response.getPolicy() != null ? response.getPolicy().getPolicyId() : null)
                 .status(response.getStatus())

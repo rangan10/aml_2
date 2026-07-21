@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface AmlQuestionnaireRepository extends JpaRepository<AmlQuestionnaire, Long> {
 
-    Optional<AmlQuestionnaire> findTopByQuestionnaireCodeOrderByVersionDesc(String questionnaireCode);
+    Optional<AmlQuestionnaire> findByQuestionnaireCode(String questionnaireCode);
 }

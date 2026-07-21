@@ -1,6 +1,5 @@
 package com.insurance.aml.entity;
 
-import com.insurance.aml.enums.QuestionnaireStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,20 +7,18 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A single immutable version of a shared questionnaire template. Any number
- * of tenants may adopt a given version via {@link AmlQuestionnaireTenant};
- * each tenant's own question configuration (mandatory/order/conditional rule)
- * is tracked separately in {@link AmlTenantQuestionnaire}. Structural changes
- * (add/remove/modify question) create a new version once responses already
- * exist against the current one, so {@link AmlQuestionnaireResponse} rows
- * keep pointing at the exact version they were answered against; all tenants
- * assigned to the current version move to the new one together.
+ * A shared questionnaire catalog entry, identified by its
+ * {@code questionnaireCode}. It carries only the tenant-agnostic definition
+ * (code, name, description); each tenant that adopts it owns its own versioned
+ * instance in {@link AmlQuestionnaireTenant}, which holds that tenant's version
+ * lineage, lifecycle (status/effective dates) and question configuration. A
+ * tenant's structural change therefore only ever versions that tenant's own
+ * instance and never affects other tenants.
  */
 @Entity
 @Table(name = "aml_questionnaire")
@@ -46,23 +43,6 @@ public class AmlQuestionnaire {
     @Column(name = "description", length = 1000)
     private String description;
 
-    @Column(name = "version", nullable = false)
-    private int version;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
-    private QuestionnaireStatus status;
-
-    @Column(name = "effective_from", nullable = false)
-    private LocalDate effectiveFrom;
-
-    @Column(name = "effective_to")
-    private LocalDate effectiveTo;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "previous_version_id")
-    private AmlQuestionnaire previousVersion;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -71,23 +51,13 @@ public class AmlQuestionnaire {
 
     @Builder.Default
     @OneToMany(mappedBy = "questionnaire", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<AmlTenantQuestionnaire> questions = new ArrayList<>();
-
-    @Builder.Default
-    @OneToMany(mappedBy = "questionnaire", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<AmlQuestionnaireTenant> tenantAssignments = new ArrayList<>();
+    private List<AmlQuestionnaireTenant> tenantInstances = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();
         this.createdAt = now;
         this.updatedAt = now;
-        if (this.status == null) {
-            this.status = QuestionnaireStatus.DRAFT;
-        }
-        if (this.version == 0) {
-            this.version = 1;
-        }
     }
 
     @PreUpdate

@@ -13,9 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * One customer's submission of a specific questionnaire version. The
- * questionnaire reference pins the exact version answered, so later
- * structural changes to the questionnaire never alter historical responses.
+ * One customer's submission of a specific tenant questionnaire version. The
+ * {@link AmlQuestionnaireTenant} reference pins the exact tenant-version
+ * answered, so later structural changes to that tenant's questionnaire never
+ * alter historical responses.
  */
 @Entity
 @Table(name = "aml_questionnaire_response")
@@ -36,8 +37,8 @@ public class AmlQuestionnaireResponse {
     private Tenant tenant;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "questionnaire_id", nullable = false)
-    private AmlQuestionnaire questionnaire;
+    @JoinColumn(name = "questionnaire_tenant_id", nullable = false)
+    private AmlQuestionnaireTenant questionnaireTenant;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)

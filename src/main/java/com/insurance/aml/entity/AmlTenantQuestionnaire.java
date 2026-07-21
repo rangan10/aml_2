@@ -10,9 +10,10 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 /**
- * Maps a question (global or tenant-specific) onto a specific questionnaire
- * version, carrying the tenant's configuration for that question: whether it
- * is mandatory, its display order, and any conditional display rule.
+ * Maps a question (global or tenant-specific) onto a specific tenant
+ * questionnaire version ({@link AmlQuestionnaireTenant}), carrying that
+ * tenant's configuration for the question: whether it is mandatory, its
+ * display order, and any conditional display rule.
  */
 @Entity
 @Table(name = "aml_tenant_questionnaire")
@@ -29,12 +30,8 @@ public class AmlTenantQuestionnaire {
     private Long tenantQuestionnaireId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", nullable = false)
-    private Tenant tenant;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "questionnaire_id", nullable = false)
-    private AmlQuestionnaire questionnaire;
+    @JoinColumn(name = "questionnaire_tenant_id", nullable = false)
+    private AmlQuestionnaireTenant questionnaireTenant;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
