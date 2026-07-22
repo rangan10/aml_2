@@ -21,7 +21,6 @@ CREATE TABLE tenant (
 
 CREATE TABLE aml_question (
     question_id     BIGSERIAL PRIMARY KEY,
-    tenant_id       BIGINT REFERENCES tenant(tenant_id),
     question_code   VARCHAR(50)  NOT NULL,
     question_text   VARCHAR(500) NOT NULL,
     question_type   VARCHAR(20)  NOT NULL,
@@ -30,12 +29,6 @@ CREATE TABLE aml_question (
     created_at      TIMESTAMP NOT NULL DEFAULT now(),
     updated_at      TIMESTAMP NOT NULL DEFAULT now()
 );
-
-CREATE INDEX idx_question_tenant ON aml_question(tenant_id);
--- one global question per code
-CREATE UNIQUE INDEX uq_question_global_code ON aml_question(question_code) WHERE tenant_id IS NULL;
--- one tenant-specific question per code, per tenant
-CREATE UNIQUE INDEX uq_question_tenant_code ON aml_question(tenant_id, question_code) WHERE tenant_id IS NOT NULL;
 
 CREATE TABLE aml_question_option (
     option_id       BIGSERIAL PRIMARY KEY,
@@ -114,16 +107,3 @@ CREATE TABLE aml_questionnaire_response (
 CREATE INDEX idx_questionnaire_response_tenant ON aml_questionnaire_response(tenant_id);
 CREATE INDEX idx_questionnaire_response_questionnaire ON aml_questionnaire_response(questionnaire_id);
 CREATE INDEX idx_questionnaire_response_customer ON aml_questionnaire_response(customer_id);
-
-CREATE TABLE aml_question_response (
-    question_response_id     BIGSERIAL PRIMARY KEY,
-    response_id               BIGINT NOT NULL REFERENCES aml_questionnaire_response(response_id),
-    tenant_id                  BIGINT NOT NULL REFERENCES tenant(tenant_id),
-    question_id                BIGINT NOT NULL REFERENCES aml_question(question_id),
-    option_id                   BIGINT REFERENCES aml_question_option(option_id),
-    answer_text                 VARCHAR(1000),
-    created_at                 TIMESTAMP NOT NULL DEFAULT now()
-);
-
-CREATE INDEX idx_question_response_response ON aml_question_response(response_id);
-CREATE INDEX idx_question_response_question ON aml_question_response(question_id);

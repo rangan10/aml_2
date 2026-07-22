@@ -11,4 +11,7 @@ public interface AmlQuestionOptionRepository extends JpaRepository<AmlQuestionOp
     List<AmlQuestionOption> findByQuestion_QuestionIdOrderByDisplayOrderAsc(Long questionId);
 
     Optional<AmlQuestionOption> findByQuestion_QuestionIdAndOptionCode(Long questionId, String optionCode);
+
+    Optional<AmlQuestionOption> findByQuestion_QuestionIdAndOptionId(Long questionId, Long optionId);
+
 }

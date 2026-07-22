@@ -15,15 +15,15 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class QuestionnaireResponseDto {
+public class QuestionResponseDto {
 
     private Long responseId;
 
     private Long tenantId;
 
-    private Long questionnaireId;
+    private Long questionId;
 
-    private String questionnaireCode;
+    private String questionCode;
 
     private int version;
 

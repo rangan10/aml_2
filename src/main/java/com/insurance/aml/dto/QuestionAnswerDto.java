@@ -15,11 +15,13 @@ import java.util.List;
 @Builder
 public class QuestionAnswerDto {
 
-    private String questionCode;
+    private Long responseId;
+
+    private Long questionId;
 
     private String questionText;
 
     private String answerText;
 
-    private List<String> selectedOptionCodes;
+    private List<Long> selectedOptionId;
 }

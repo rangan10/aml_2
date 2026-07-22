@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "tenant")
@@ -37,6 +39,9 @@ public class Tenant {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "tenant")
+    private Set<AmlQuestionTenant> questionMappings = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {

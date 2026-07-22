@@ -12,7 +12,9 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A question in the question bank. A question with no tenant is GLOBAL and
@@ -33,9 +35,8 @@ public class AmlQuestion {
     @Column(name = "question_id")
     private Long questionId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id")
-    private Tenant tenant;
+    @OneToMany(mappedBy = "question")
+    private Set<AmlQuestionTenant> tenantMappings = new HashSet<>();
 
     @Column(name = "question_code", nullable = false, length = 50)
     private String questionCode;
@@ -74,7 +75,7 @@ public class AmlQuestion {
         this.createdAt = now;
         this.updatedAt = now;
         this.active = true;
-        this.questionScope = this.tenant == null ? QuestionScope.GLOBAL : QuestionScope.TENANT_SPECIFIC;
+//        this.questionScope = this.tenant == null ? QuestionScope.GLOBAL : QuestionScope.TENANT_SPECIFIC;
     }
 
     @PreUpdate

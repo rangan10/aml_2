@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -68,15 +69,16 @@ public class RuleEvaluationService {
      * status) into their evaluation.
      */
     private Map<String, String> loadLatestQuestionnaireAnswers(Long customerId) {
-        return questionnaireResponseRepository.findTopByCustomer_CustomerIdOrderByCreatedAtDesc(customerId)
-                .map(response -> questionResponseRepository.findByResponse_ResponseId(response.getResponseId())
-                        .stream()
-                        .filter(qr -> qr.getAnswerText() != null)
-                        .collect(Collectors.toMap(
-                                qr -> qr.getQuestion().getQuestionCode(),
-                                AmlQuestionResponse::getAnswerText,
-                                (a, b) -> a)))
-                .orElse(Map.of());
+//        return questionnaireResponseRepository.findTopByCustomer_CustomerIdOrderByCreatedAtDesc(customerId)
+//                .map(response -> questionResponseRepository.findByResponse_ResponseId(response.getResponseId())
+//                        .stream()
+//                        .filter(qr -> qr.getAnswerText() != null)
+//                        .collect(Collectors.toMap(
+//                                qr -> qr.getQuestion().getQuestionCode(),
+//                                AmlQuestionResponse::getAnswerText,
+//                                (a, b) -> a)))
+//                .orElse(Map.of());
+        return new HashMap<>();
     }
 
     /**

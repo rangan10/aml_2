@@ -16,15 +16,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SubmitQuestionnaireResponseRequest {
-
-    @NotNull
-    private Long questionnaireId;
+public class SubmitQuestionResponseRequest {
 
     @NotNull
     private Long customerId;
-
-    private Long policyId;
 
     @NotEmpty
     @Valid

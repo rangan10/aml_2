@@ -61,9 +61,9 @@ public class AmlQuestionnaireResponse {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @Builder.Default
-    @OneToMany(mappedBy = "response", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<AmlQuestionResponse> answers = new ArrayList<>();
+//    @Builder.Default
+//    @OneToMany(mappedBy = "response", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+//    private List<AmlQuestionResponse> answers = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

@@ -15,6 +15,7 @@ import com.insurance.aml.entity.AmlQuestionOption;
 import com.insurance.aml.entity.AmlQuestionnaire;
 import com.insurance.aml.entity.AmlQuestionnaireTenant;
 import com.insurance.aml.entity.AmlTenantQuestionnaire;
+import com.insurance.aml.enums.QuestionScope;
 import com.insurance.aml.enums.QuestionnaireStatus;
 import com.insurance.aml.entity.Tenant;
 import com.insurance.aml.exception.DuplicateResourceException;
@@ -241,10 +242,10 @@ public class QuestionnaireService {
                                                    AddQuestionRequest request) {
         AmlQuestion question = resolveOrCreateQuestion(tenant, request);
 
-        if (question.getTenant() != null && !question.getTenant().getTenantId().equals(tenant.getTenantId())) {
-            throw new IllegalArgumentException("Question " + question.getQuestionCode()
-                    + " is tenant-specific to another tenant and cannot be used here");
-        }
+//        if (question.getTenant() != null && !question.getTenant().getTenantId().equals(tenant.getTenantId())) {
+//            throw new IllegalArgumentException("Question " + question.getQuestionCode()
+//                    + " is tenant-specific to another tenant and cannot be used here");
+//        }
         if (tenantQuestionnaireRepository.findByQuestionnaireTenant_QuestionnaireTenantIdAndQuestion_QuestionId(
                 instance.getQuestionnaireTenantId(), question.getQuestionId()).isPresent()) {
             throw DuplicateResourceException.forField(
@@ -264,8 +265,8 @@ public class QuestionnaireService {
 
     private AmlQuestion resolveOrCreateQuestion(Tenant tenant, AddQuestionRequest request) {
         if (request.getExistingQuestionCode() != null && !request.getExistingQuestionCode().isBlank()) {
-            return questionRepository.findByTenantIsNullAndQuestionCode(request.getExistingQuestionCode())
-                    .or(() -> questionRepository.findByTenant_TenantIdAndQuestionCode(
+            return questionRepository.findByQuestionScopeAndQuestionCode(QuestionScope.GLOBAL,request.getExistingQuestionCode())
+                    .or(() -> questionRepository.findByTenantIdAndQuestionCode(
                             tenant.getTenantId(), request.getExistingQuestionCode()))
                     .orElseThrow(() -> ResourceNotFoundException.forEntity(
                             "Question", request.getExistingQuestionCode()));
@@ -277,14 +278,14 @@ public class QuestionnaireService {
                     "questionCode, questionText, questionType and category are required when "
                             + "existingQuestionCode is not set");
         }
-        if (questionRepository.findByTenantIsNullAndQuestionCode(request.getQuestionCode()).isPresent()
-                || questionRepository.findByTenant_TenantIdAndQuestionCode(
+        if (questionRepository.findByQuestionScopeAndQuestionCode(QuestionScope.GLOBAL,request.getQuestionCode()).isPresent()
+                || questionRepository.findByTenantIdAndQuestionCode(
                         tenant.getTenantId(), request.getQuestionCode()).isPresent()) {
             throw DuplicateResourceException.forField("Question", "questionCode", request.getQuestionCode());
         }
 
         AmlQuestion question = AmlQuestion.builder()
-                .tenant(tenant)
+//                .tenant(tenant)
                 .questionCode(request.getQuestionCode())
                 .questionText(request.getQuestionText())
                 .questionType(request.getQuestionType())
@@ -391,7 +392,7 @@ public class QuestionnaireService {
 
         return QuestionDto.builder()
                 .questionId(question.getQuestionId())
-                .tenantId(question.getTenant() != null ? question.getTenant().getTenantId() : null)
+//                .tenantId(question.getTenant() != null ? question.getTenant().getTenantId() : null)
                 .questionCode(question.getQuestionCode())
                 .questionText(question.getQuestionText())
                 .questionType(question.getQuestionType())

@@ -21,7 +21,6 @@
 
 -- ==================== Drop old assembly/response tables (FK order) ====================
 
-DROP TABLE IF EXISTS aml_question_response;
 DROP TABLE IF EXISTS aml_questionnaire_response;
 DROP TABLE IF EXISTS aml_tenant_questionnaire;
 DROP TABLE IF EXISTS aml_questionnaire_tenant;
@@ -103,18 +102,7 @@ CREATE INDEX idx_questionnaire_response_tenant ON aml_questionnaire_response(ten
 CREATE INDEX idx_questionnaire_response_instance ON aml_questionnaire_response(questionnaire_tenant_id);
 CREATE INDEX idx_questionnaire_response_customer ON aml_questionnaire_response(customer_id);
 
-CREATE TABLE aml_question_response (
-    question_response_id     BIGSERIAL PRIMARY KEY,
-    response_id              BIGINT NOT NULL REFERENCES aml_questionnaire_response(response_id),
-    tenant_id                BIGINT NOT NULL REFERENCES tenant(tenant_id),
-    question_id              BIGINT NOT NULL REFERENCES aml_question(question_id),
-    option_id                BIGINT REFERENCES aml_question_option(option_id),
-    answer_text              VARCHAR(1000),
-    created_at               TIMESTAMP NOT NULL DEFAULT now()
-);
 
-CREATE INDEX idx_question_response_response ON aml_question_response(response_id);
-CREATE INDEX idx_question_response_question ON aml_question_response(question_id);
 
 -- ==================== Re-seed KSHEMA "AML Risk Assessment Questionnaire" ====================
 -- Questions/options already exist in aml_question/aml_question_option and are
@@ -138,12 +126,30 @@ WHERE qn.questionnaire_code = 'AML_RISK_ASSESSMENT'
       WHERE qt.questionnaire_id = qn.questionnaire_id AND qt.tenant_id = t.tenant_id AND qt.version = 1
   );
 
-INSERT INTO aml_tenant_questionnaire (questionnaire_tenant_id, question_id, mandatory, display_order, conditional_rule)
-SELECT qt.questionnaire_tenant_id, q.question_id, v.mandatory, v.display_order, v.conditional_rule
+INSERT INTO aml_tenant_questionnaire (
+    questionnaire_tenant_id,
+    question_id,
+    mandatory,
+    display_order,
+    conditional_rule
+)
+SELECT
+    qt.questionnaire_tenant_id,
+    q.question_id,
+    v.mandatory,
+    v.display_order,
+    v.conditional_rule
 FROM aml_questionnaire_tenant qt
-JOIN aml_questionnaire qn ON qn.questionnaire_id = qt.questionnaire_id AND qn.questionnaire_code = 'AML_RISK_ASSESSMENT'
-JOIN tenant t ON t.tenant_id = qt.tenant_id AND t.tenant_code = 'KSHEMA'
-CROSS JOIN (VALUES
+JOIN aml_questionnaire qn
+    ON qn.questionnaire_id = qt.questionnaire_id
+   AND qn.questionnaire_code = 'AML_RISK_ASSESSMENT'
+
+JOIN tenant t
+    ON t.tenant_id = qt.tenant_id
+   AND t.tenant_code = 'KSHEMA'
+
+CROSS JOIN (
+    VALUES
         ('EMPLOYMENT_TYPE',                TRUE,  1,  NULL::text),
         ('COUNTRY_OF_RESIDENCE',           TRUE,  2,  NULL),
         ('NRI_FLAG',                       TRUE,  3,  NULL),
@@ -153,30 +159,40 @@ CROSS JOIN (VALUES
         ('ANNUAL_INCOME',                  TRUE,  7,  NULL),
         ('SOURCE_OF_INCOME',               TRUE,  8,  NULL),
         ('CURRENT_ADDRESS',                TRUE,  9,  NULL),
-        ('PERMANENT_ADDRESS',              TRUE,  10, NULL),
-        ('PAN_NUMBER',                     TRUE,  11, NULL),
-        ('MOBILE_NUMBER',                  TRUE,  12, NULL),
-        ('EMAIL_ADDRESS',                  TRUE,  13, NULL),
-        ('CKYC_AVAILABLE',                 TRUE,  14, NULL),
+        ('PERMANENT_ADDRESS',              TRUE, 10,  NULL),
+        ('PAN_NUMBER',                     TRUE, 11,  NULL),
+        ('MOBILE_NUMBER',                  TRUE, 12,  NULL),
+        ('EMAIL_ADDRESS',                  TRUE, 13,  NULL),
+        ('CKYC_AVAILABLE',                 TRUE, 14,  NULL),
         ('CKYC_KIN_NUMBER',                FALSE, 15, '{"dependsOnQuestionCode":"CKYC_AVAILABLE","operator":"EQUALS","expectedValue":"true"}'),
-        ('SUM_INSURED',                    TRUE,  16, NULL),
-        ('PREMIUM_AMOUNT',                 TRUE,  17, NULL),
-        ('PAYMENT_MODE',                   TRUE,  18, NULL),
-        ('PREMIUM_PAYER_TYPE',             TRUE,  19, NULL),
+        ('SUM_INSURED',                    TRUE, 16,  NULL),
+        ('PREMIUM_AMOUNT',                 TRUE, 17,  NULL),
+        ('PAYMENT_MODE',                   TRUE, 18,  NULL),
+        ('PREMIUM_PAYER_TYPE',             TRUE, 19,  NULL),
         ('PAYER_NAME',                     FALSE, 20, '{"dependsOnQuestionCode":"PREMIUM_PAYER_TYPE","operator":"EQUALS","expectedValue":"OTHER"}'),
         ('PAYER_PAN',                      FALSE, 21, '{"dependsOnQuestionCode":"PREMIUM_PAYER_TYPE","operator":"EQUALS","expectedValue":"OTHER"}'),
         ('RELATIONSHIP_TO_INSURED',        FALSE, 22, '{"dependsOnQuestionCode":"PREMIUM_PAYER_TYPE","operator":"IN","expectedValue":"NOMINEE,OTHER"}'),
-        ('HYPOTHECATION_STATUS',           TRUE,  23, NULL),
-        ('NOMINEE_NAME',                   TRUE,  24, NULL),
-        ('NOMINEE_RELATIONSHIP',           TRUE,  25, NULL),
-        ('ASSIGNEE_EXISTS',                TRUE,  26, NULL),
-        ('BENEFICIAL_OWNER_FLAG',          TRUE,  27, NULL),
+        ('HYPOTHECATION_STATUS',           TRUE, 23,  NULL),
+        ('NOMINEE_NAME',                   TRUE, 24,  NULL),
+        ('NOMINEE_RELATIONSHIP',           TRUE, 25,  NULL),
+        ('ASSIGNEE_EXISTS',                TRUE, 26,  NULL),
+        ('BENEFICIAL_OWNER_FLAG',          TRUE, 27,  NULL),
         ('ULTIMATE_BENEFICIAL_OWNER_NAME', FALSE, 28, '{"dependsOnQuestionCode":"BENEFICIAL_OWNER_FLAG","operator":"EQUALS","expectedValue":"true"}'),
-        ('FOREIGN_SOURCE_OF_FUNDS',        TRUE,  29, NULL),
+        ('FOREIGN_SOURCE_OF_FUNDS',        TRUE, 29,  NULL),
         ('FOREIGN_COUNTRY',                FALSE, 30, '{"dependsOnQuestionCode":"FOREIGN_SOURCE_OF_FUNDS","operator":"EQUALS","expectedValue":"true"}')
-     ) AS v(question_code, mandatory, display_order, conditional_rule)
-JOIN aml_question q ON q.tenant_id = t.tenant_id AND q.question_code = v.question_code
+) AS v(question_code, mandatory, display_order, conditional_rule)
+
+JOIN aml_question q
+    ON q.question_code = v.question_code
+
+JOIN aml_question_tenant aqt
+    ON aqt.question_id = q.question_id
+   AND aqt.tenant_id = t.tenant_id
+   AND aqt.active = TRUE
+
 WHERE NOT EXISTS (
-    SELECT 1 FROM aml_tenant_questionnaire existing
-    WHERE existing.questionnaire_tenant_id = qt.questionnaire_tenant_id AND existing.question_id = q.question_id
+    SELECT 1
+    FROM aml_tenant_questionnaire existing
+    WHERE existing.questionnaire_tenant_id = qt.questionnaire_tenant_id
+      AND existing.question_id = q.question_id
 );

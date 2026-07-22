@@ -37,23 +37,47 @@ ON CONFLICT (tenant_code) DO NOTHING;
 
 -- ==================== 2. AML_QUESTIONNAIRE ====================
 
-INSERT INTO aml_questionnaire (tenant_id, questionnaire_code, name, description, version, status, effective_from)
-SELECT t.tenant_id, 'AML_RISK_ASSESSMENT', 'AML Risk Assessment Questionnaire',
-       'Customer-facing questionnaire capturing KYC/EDD data points used for AML risk assessment.',
-       1, 'ACTIVE', CURRENT_DATE
+INSERT INTO aml_questionnaire (
+    tenant_id,
+    questionnaire_code,
+    name,
+    description,
+    version,
+    status,
+    effective_from
+)
+SELECT
+    t.tenant_id,
+    'AML_RISK_ASSESSMENT',
+    'AML Risk Assessment Questionnaire',
+    'Customer-facing questionnaire capturing KYC/EDD data points used for AML risk assessment.',
+    1,
+    'ACTIVE',
+    CURRENT_DATE
 FROM tenant t
 WHERE t.tenant_code = 'KSHEMA'
   AND NOT EXISTS (
-      SELECT 1 FROM aml_questionnaire q
-      WHERE q.tenant_id = t.tenant_id AND q.questionnaire_code = 'AML_RISK_ASSESSMENT' AND q.version = 1
+      SELECT 1
+      FROM aml_questionnaire q
+      WHERE q.tenant_id = t.tenant_id
+        AND q.questionnaire_code = 'AML_RISK_ASSESSMENT'
+        AND q.version = 1
   );
 
 -- ==================== 3. AML_QUESTION (tenant-specific, owned by KSHEMA) ====================
-
-INSERT INTO aml_question (tenant_id, question_code, question_text, question_type, question_scope)
-SELECT t.tenant_id, v.question_code, v.question_text, v.question_type, 'TENANT_SPECIFIC'
-FROM tenant t,
-     (VALUES
+INSERT INTO aml_question (
+    question_code,
+    question_text,
+    question_type,
+    question_scope
+)
+SELECT
+    v.question_code,
+    v.question_text,
+    v.question_type,
+    'TENANT_SPECIFIC'
+FROM (
+     VALUES
         ('EMPLOYMENT_TYPE',               'What is your employment type?',                                        'SINGLE_CHOICE'),
         ('COUNTRY_OF_RESIDENCE',          'What is your country of residence?',                                   'TEXT'),
         ('NRI_FLAG',                      'Are you a Non-Resident Indian (NRI)?',                                 'BOOLEAN'),
@@ -81,23 +105,31 @@ FROM tenant t,
         ('NOMINEE_RELATIONSHIP',          'What is the nominee''s relationship to the insured?',                  'TEXT'),
         ('ASSIGNEE_EXISTS',               'Does this policy have an assignee?',                                   'BOOLEAN'),
         ('BENEFICIAL_OWNER_FLAG',         'Is there a beneficial owner other than the insured/proposer?',         'BOOLEAN'),
-        ('ULTIMATE_BENEFICIAL_OWNER_NAME','What is the name of the Ultimate Beneficial Owner (UBO)?',             'TEXT'),
-        ('FOREIGN_SOURCE_OF_FUNDS',       'Is the source of funds for this policy from a foreign country?',      'BOOLEAN'),
+        ('ULTIMATE_BENEFICIAL_OWNER_NAME','What is the name of the Ultimate Beneficial Owner (UBO)?',            'TEXT'),
+        ('FOREIGN_SOURCE_OF_FUNDS',       'Is the source of funds for this policy from a foreign country?',       'BOOLEAN'),
         ('FOREIGN_COUNTRY',               'Which foreign country is the source of funds from?',                   'TEXT')
-     ) AS v(question_code, question_text, question_type)
-WHERE t.tenant_code = 'KSHEMA'
-  AND NOT EXISTS (
-      SELECT 1 FROM aml_question q WHERE q.tenant_id = t.tenant_id AND q.question_code = v.question_code
-  );
+) AS v(question_code, question_text, question_type)
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM aml_question q
+    WHERE q.question_code = v.question_code
+);
 
 -- ==================== 4. AML_QUESTION_OPTION ====================
-
--- Employment Type
-INSERT INTO aml_question_option (question_id, option_code, option_label, display_order)
-SELECT q.question_id, v.option_code, v.option_label, v.display_order
-FROM aml_question q
-JOIN tenant t ON t.tenant_id = q.tenant_id AND t.tenant_code = 'KSHEMA',
-     (VALUES
+INSERT INTO aml_question_option (
+    question_id,
+    option_code,
+    option_label,
+    display_order
+)
+SELECT
+    q.question_id,
+    v.option_code,
+    v.option_label,
+    v.display_order
+FROM aml_question q,
+(
+    VALUES
         ('GOVERNMENT_EMPLOYEE', 'Government Employee', 1),
         ('SALARIED_EMPLOYEE',   'Salaried Employee',   2),
         ('SELF_EMPLOYED',       'Self Employed',       3),
@@ -106,15 +138,31 @@ JOIN tenant t ON t.tenant_id = q.tenant_id AND t.tenant_code = 'KSHEMA',
         ('NGO',                 'NGO',                 6),
         ('TRUST',               'Trust',               7),
         ('OTHER',               'Other',               8)
-     ) AS v(option_code, option_label, display_order)
-WHERE q.question_code = 'EMPLOYMENT_TYPE';
+) AS v(option_code, option_label, display_order)
+WHERE q.question_code = 'EMPLOYMENT_TYPE'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM aml_question_option qo
+      WHERE qo.question_id = q.question_id
+        AND qo.option_code = v.option_code
+  );
+
 
 -- Source Of Income
-INSERT INTO aml_question_option (question_id, option_code, option_label, display_order)
-SELECT q.question_id, v.option_code, v.option_label, v.display_order
-FROM aml_question q
-JOIN tenant t ON t.tenant_id = q.tenant_id AND t.tenant_code = 'KSHEMA',
-     (VALUES
+INSERT INTO aml_question_option (
+    question_id,
+    option_code,
+    option_label,
+    display_order
+)
+SELECT
+    q.question_id,
+    v.option_code,
+    v.option_label,
+    v.display_order
+FROM aml_question q,
+(
+    VALUES
         ('SALARY',         'Salary',         1),
         ('BUSINESS',       'Business',       2),
         ('AGRICULTURE',    'Agriculture',    3),
@@ -123,60 +171,131 @@ JOIN tenant t ON t.tenant_id = q.tenant_id AND t.tenant_code = 'KSHEMA',
         ('INVESTMENTS',    'Investments',    6),
         ('INHERITANCE',    'Inheritance',    7),
         ('OTHER',          'Other',          8)
-     ) AS v(option_code, option_label, display_order)
-WHERE q.question_code = 'SOURCE_OF_INCOME';
+) AS v(option_code, option_label, display_order)
+WHERE q.question_code = 'SOURCE_OF_INCOME'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM aml_question_option qo
+      WHERE qo.question_id = q.question_id
+        AND qo.option_code = v.option_code
+  );
+
 
 -- Payment Mode
-INSERT INTO aml_question_option (question_id, option_code, option_label, display_order)
-SELECT q.question_id, v.option_code, v.option_label, v.display_order
-FROM aml_question q
-JOIN tenant t ON t.tenant_id = q.tenant_id AND t.tenant_code = 'KSHEMA',
-     (VALUES
-        ('UPI',           'UPI',           1),
-        ('NET_BANKING',   'Net Banking',   2),
-        ('DEBIT_CARD',    'Debit Card',    3),
-        ('CREDIT_CARD',   'Credit Card',   4),
-        ('CASH',          'Cash',          5),
-        ('DEMAND_DRAFT',  'Demand Draft',  6),
-        ('NEFT',          'NEFT',          7),
-        ('RTGS',          'RTGS',          8)
-     ) AS v(option_code, option_label, display_order)
-WHERE q.question_code = 'PAYMENT_MODE';
+INSERT INTO aml_question_option (
+    question_id,
+    option_code,
+    option_label,
+    display_order
+)
+SELECT
+    q.question_id,
+    v.option_code,
+    v.option_label,
+    v.display_order
+FROM aml_question q,
+(
+    VALUES
+        ('UPI',          'UPI',          1),
+        ('NET_BANKING',  'Net Banking',  2),
+        ('DEBIT_CARD',   'Debit Card',   3),
+        ('CREDIT_CARD',  'Credit Card',  4),
+        ('CASH',         'Cash',         5),
+        ('DEMAND_DRAFT', 'Demand Draft', 6),
+        ('NEFT',         'NEFT',         7),
+        ('RTGS',         'RTGS',         8)
+) AS v(option_code, option_label, display_order)
+WHERE q.question_code = 'PAYMENT_MODE'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM aml_question_option qo
+      WHERE qo.question_id = q.question_id
+        AND qo.option_code = v.option_code
+  );
 
 -- Premium Payer Type
-INSERT INTO aml_question_option (question_id, option_code, option_label, display_order)
-SELECT q.question_id, v.option_code, v.option_label, v.display_order
-FROM aml_question q
-JOIN tenant t ON t.tenant_id = q.tenant_id AND t.tenant_code = 'KSHEMA',
-     (VALUES
+INSERT INTO aml_question_option (
+    question_id,
+    option_code,
+    option_label,
+    display_order
+)
+SELECT
+    q.question_id,
+    v.option_code,
+    v.option_label,
+    v.display_order
+FROM aml_question q,
+(
+    VALUES
         ('PROPOSER', 'Proposer', 1),
         ('INSURED',  'Insured',  2),
         ('NOMINEE',  'Nominee',  3),
         ('OTHER',    'Other',    4)
-     ) AS v(option_code, option_label, display_order)
-WHERE q.question_code = 'PREMIUM_PAYER_TYPE';
+) AS v(option_code, option_label, display_order)
+WHERE q.question_code = 'PREMIUM_PAYER_TYPE'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM aml_question_option qo
+      WHERE qo.question_id = q.question_id
+        AND qo.option_code = v.option_code
+  );
+
 
 -- Hypothecation Status
-INSERT INTO aml_question_option (question_id, option_code, option_label, display_order)
-SELECT q.question_id, v.option_code, v.option_label, v.display_order
-FROM aml_question q
-JOIN tenant t ON t.tenant_id = q.tenant_id AND t.tenant_code = 'KSHEMA',
-     (VALUES
+INSERT INTO aml_question_option (
+    question_id,
+    option_code,
+    option_label,
+    display_order
+)
+SELECT
+    q.question_id,
+    v.option_code,
+    v.option_label,
+    v.display_order
+FROM aml_question q,
+(
+    VALUES
         ('HYPOTHECATED',     'Hypothecated',     1),
         ('NON_HYPOTHECATED', 'Non Hypothecated', 2)
-     ) AS v(option_code, option_label, display_order)
-WHERE q.question_code = 'HYPOTHECATION_STATUS';
+) AS v(option_code, option_label, display_order)
+WHERE q.question_code = 'HYPOTHECATION_STATUS'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM aml_question_option qo
+      WHERE qo.question_id = q.question_id
+        AND qo.option_code = v.option_code
+  );
 
 -- ==================== 5. AML_TENANT_QUESTIONNAIRE (attaches questions to the questionnaire) ====================
 -- Required by the schema: aml_question rows alone are not "in" a
 -- questionnaire until mapped here, with mandatory/display_order/
 -- conditional_rule carried per this tenant's configuration.
 
-INSERT INTO aml_tenant_questionnaire (tenant_id, questionnaire_id, question_id, mandatory, display_order, conditional_rule)
-SELECT t.tenant_id, qn.questionnaire_id, q.question_id, v.mandatory, v.display_order, v.conditional_rule
+INSERT INTO aml_tenant_questionnaire (
+    tenant_id,
+    questionnaire_id,
+    question_id,
+    mandatory,
+    display_order,
+    conditional_rule
+)
+SELECT
+    t.tenant_id,
+    qn.questionnaire_id,
+    q.question_id,
+    v.mandatory,
+    v.display_order,
+    v.conditional_rule
 FROM tenant t
-JOIN aml_questionnaire qn ON qn.tenant_id = t.tenant_id AND qn.questionnaire_code = 'AML_RISK_ASSESSMENT' AND qn.version = 1
-CROSS JOIN (VALUES
+JOIN aml_questionnaire qn
+    ON qn.tenant_id = t.tenant_id
+   AND qn.questionnaire_code = 'AML_RISK_ASSESSMENT'
+   AND qn.version = 1
+
+CROSS JOIN (
+    VALUES
         ('EMPLOYMENT_TYPE',                TRUE,  1,  NULL::text),
         ('COUNTRY_OF_RESIDENCE',           TRUE,  2,  NULL),
         ('NRI_FLAG',                       TRUE,  3,  NULL),
@@ -186,31 +305,48 @@ CROSS JOIN (VALUES
         ('ANNUAL_INCOME',                  TRUE,  7,  NULL),
         ('SOURCE_OF_INCOME',               TRUE,  8,  NULL),
         ('CURRENT_ADDRESS',                TRUE,  9,  NULL),
-        ('PERMANENT_ADDRESS',              TRUE,  10, NULL),
-        ('PAN_NUMBER',                     TRUE,  11, NULL),
-        ('MOBILE_NUMBER',                  TRUE,  12, NULL),
-        ('EMAIL_ADDRESS',                  TRUE,  13, NULL),
-        ('CKYC_AVAILABLE',                 TRUE,  14, NULL),
-        ('CKYC_KIN_NUMBER',                FALSE, 15, '{"dependsOnQuestionCode":"CKYC_AVAILABLE","operator":"EQUALS","expectedValue":"true"}'),
-        ('SUM_INSURED',                    TRUE,  16, NULL),
-        ('PREMIUM_AMOUNT',                 TRUE,  17, NULL),
-        ('PAYMENT_MODE',                   TRUE,  18, NULL),
-        ('PREMIUM_PAYER_TYPE',             TRUE,  19, NULL),
-        ('PAYER_NAME',                     FALSE, 20, '{"dependsOnQuestionCode":"PREMIUM_PAYER_TYPE","operator":"EQUALS","expectedValue":"OTHER"}'),
-        ('PAYER_PAN',                      FALSE, 21, '{"dependsOnQuestionCode":"PREMIUM_PAYER_TYPE","operator":"EQUALS","expectedValue":"OTHER"}'),
-        ('RELATIONSHIP_TO_INSURED',        FALSE, 22, '{"dependsOnQuestionCode":"PREMIUM_PAYER_TYPE","operator":"IN","expectedValue":"NOMINEE,OTHER"}'),
-        ('HYPOTHECATION_STATUS',           TRUE,  23, NULL),
-        ('NOMINEE_NAME',                   TRUE,  24, NULL),
-        ('NOMINEE_RELATIONSHIP',           TRUE,  25, NULL),
-        ('ASSIGNEE_EXISTS',                TRUE,  26, NULL),
-        ('BENEFICIAL_OWNER_FLAG',          TRUE,  27, NULL),
-        ('ULTIMATE_BENEFICIAL_OWNER_NAME', FALSE, 28, '{"dependsOnQuestionCode":"BENEFICIAL_OWNER_FLAG","operator":"EQUALS","expectedValue":"true"}'),
-        ('FOREIGN_SOURCE_OF_FUNDS',        TRUE,  29, NULL),
-        ('FOREIGN_COUNTRY',                FALSE, 30, '{"dependsOnQuestionCode":"FOREIGN_SOURCE_OF_FUNDS","operator":"EQUALS","expectedValue":"true"}')
-     ) AS v(question_code, mandatory, display_order, conditional_rule)
-JOIN aml_question q ON q.tenant_id = t.tenant_id AND q.question_code = v.question_code
+        ('PERMANENT_ADDRESS',              TRUE, 10,  NULL),
+        ('PAN_NUMBER',                     TRUE, 11,  NULL),
+        ('MOBILE_NUMBER',                  TRUE, 12,  NULL),
+        ('EMAIL_ADDRESS',                  TRUE, 13,  NULL),
+        ('CKYC_AVAILABLE',                 TRUE, 14,  NULL),
+        ('CKYC_KIN_NUMBER',                FALSE, 15,
+            '{"dependsOnQuestionCode":"CKYC_AVAILABLE","operator":"EQUALS","expectedValue":"true"}'),
+        ('SUM_INSURED',                    TRUE, 16,  NULL),
+        ('PREMIUM_AMOUNT',                 TRUE, 17,  NULL),
+        ('PAYMENT_MODE',                   TRUE, 18,  NULL),
+        ('PREMIUM_PAYER_TYPE',             TRUE, 19,  NULL),
+        ('PAYER_NAME',                     FALSE, 20,
+            '{"dependsOnQuestionCode":"PREMIUM_PAYER_TYPE","operator":"EQUALS","expectedValue":"OTHER"}'),
+        ('PAYER_PAN',                      FALSE, 21,
+            '{"dependsOnQuestionCode":"PREMIUM_PAYER_TYPE","operator":"EQUALS","expectedValue":"OTHER"}'),
+        ('RELATIONSHIP_TO_INSURED',        FALSE, 22,
+            '{"dependsOnQuestionCode":"PREMIUM_PAYER_TYPE","operator":"IN","expectedValue":"NOMINEE,OTHER"}'),
+        ('HYPOTHECATION_STATUS',           TRUE, 23,  NULL),
+        ('NOMINEE_NAME',                   TRUE, 24,  NULL),
+        ('NOMINEE_RELATIONSHIP',           TRUE, 25,  NULL),
+        ('ASSIGNEE_EXISTS',                TRUE, 26,  NULL),
+        ('BENEFICIAL_OWNER_FLAG',          TRUE, 27,  NULL),
+        ('ULTIMATE_BENEFICIAL_OWNER_NAME', FALSE, 28,
+            '{"dependsOnQuestionCode":"BENEFICIAL_OWNER_FLAG","operator":"EQUALS","expectedValue":"true"}'),
+        ('FOREIGN_SOURCE_OF_FUNDS',        TRUE, 29,  NULL),
+        ('FOREIGN_COUNTRY',                FALSE, 30,
+            '{"dependsOnQuestionCode":"FOREIGN_SOURCE_OF_FUNDS","operator":"EQUALS","expectedValue":"true"}')
+) AS v(question_code, mandatory, display_order, conditional_rule)
+
+JOIN aml_question q
+    ON q.question_code = v.question_code
+
+JOIN aml_question_tenant aqt
+    ON aqt.question_id = q.question_id
+   AND aqt.tenant_id = t.tenant_id
+   AND aqt.version_no = 1
+   AND aqt.active = TRUE
+
 WHERE t.tenant_code = 'KSHEMA'
   AND NOT EXISTS (
-      SELECT 1 FROM aml_tenant_questionnaire existing
-      WHERE existing.questionnaire_id = qn.questionnaire_id AND existing.question_id = q.question_id
+        SELECT 1
+        FROM aml_tenant_questionnaire existing
+        WHERE existing.questionnaire_id = qn.questionnaire_id
+          AND existing.question_id = q.question_id
   );
