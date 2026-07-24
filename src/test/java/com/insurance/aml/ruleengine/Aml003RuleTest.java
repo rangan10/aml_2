@@ -2,9 +2,7 @@ package com.insurance.aml.ruleengine;
 
 import com.insurance.aml.config.AmlRuleProperties;
 import com.insurance.aml.dto.RuleEvaluationResult;
-import com.insurance.aml.entity.Customer;
 import com.insurance.aml.enums.OccupationType;
-import com.insurance.aml.entity.Policy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

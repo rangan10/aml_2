@@ -2,10 +2,8 @@ package com.insurance.aml.ruleengine;
 
 import com.insurance.aml.config.AmlRuleProperties;
 import com.insurance.aml.dto.RuleEvaluationResult;
-import com.insurance.aml.entity.*;
 import com.insurance.aml.enums.OccupationType;
 import com.insurance.aml.enums.RefundReason;
-import com.insurance.aml.repository.RefundTransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

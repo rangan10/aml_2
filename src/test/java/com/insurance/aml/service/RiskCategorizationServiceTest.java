@@ -1,6 +1,5 @@
 package com.insurance.aml.service;
 
-import com.insurance.aml.entity.Customer;
 import com.insurance.aml.enums.OccupationType;
 import com.insurance.aml.enums.RiskCategory;
 import org.junit.jupiter.api.Test;

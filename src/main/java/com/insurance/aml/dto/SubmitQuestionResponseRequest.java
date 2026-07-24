@@ -19,7 +19,7 @@ import java.util.List;
 public class SubmitQuestionResponseRequest {
 
     @NotNull
-    private Long customerId;
+    private Long userProfileId;
 
     @NotEmpty
     @Valid

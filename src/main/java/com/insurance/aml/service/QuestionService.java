@@ -30,13 +30,11 @@ public class QuestionService {
     private final AmlQuestionRepository questionRepository;
     private final AmlQuestionOptionRepository questionOptionRepository;
     private final AmlQuestionTenantRepo amlQuestionTenantRepo;
-    private final TenantService tenantService;
-    private final CustomerRepository customerRepository;
     private final AmlQuestionResponseRepository responseRepository;
     private final AmlQuestionOptionResponseRepo optionResponseRepo;
 
     public List<QuestionDto> getQuestions(Long tenantId, QuestionCategory category) {
-        tenantService.findTenantOrThrow(tenantId);
+//        tenantService.findTenantOrThrow(tenantId);
 
         List<AmlQuestion> questions = new ArrayList<>();
         if (category != null) {
@@ -79,31 +77,31 @@ public class QuestionService {
     @Transactional
     public String submitResponse(Long tenantId, @Valid SubmitQuestionResponseRequest request) {
 
-        Tenant tenant = tenantService.findTenantOrThrow(tenantId);
-
-        Customer customer = customerRepository.findById(request.getCustomerId())
-                .orElseThrow(() -> ResourceNotFoundException.forEntity("Customer", request.getCustomerId()));
+//        Tenant tenant = tenantService.findTenantOrThrow(tenantId);
+//
+//        Customer customer = customerRepository.findById(request.getCustomerId())
+//                .orElseThrow(() -> ResourceNotFoundException.forEntity("Customer", request.getCustomerId()));
 
         for(AnswerRequest answer : request.getAnswers()) {
-            saveQuestionResponse(tenant, customer, answer);
+            saveQuestionResponse(tenantId, request.getUserProfileId(), answer);
         }
 
         return "your response has been submitted successfully";
     }
 
-    public void saveQuestionResponse(Tenant tenant, Customer customer, AnswerRequest answer) {
+    public void saveQuestionResponse(Long tenantId, Long userProfileId, AnswerRequest answer) {
 
-        System.out.println(answer.getQuestionId()+", "+tenant.getTenantId());
+        System.out.println(answer.getQuestionId()+", "+tenantId);
         AmlQuestion question = amlQuestionTenantRepo
-                .findByTenantIdAndQuestionId(tenant.getTenantId(),
+                .findByTenantIdAndQuestionId(tenantId,
                         answer.getQuestionId())
                 .orElseThrow(() -> ResourceNotFoundException.forEntity("Question", answer.getQuestionId()));
 
 
 
         AmlQuestionResponse questionResponse = AmlQuestionResponse.builder()
-                .tenant(tenant)
-                .user(customer)
+                .tenantId(tenantId)
+                .userProfileId(userProfileId)
                 .question(question)
                 .options(new ArrayList<>())
                 .status(QuestionnaireResponseStatus.SUBMITTED)
@@ -141,14 +139,10 @@ public class QuestionService {
     }
 
     @Transactional
-    public AmlUserQuestionResponseDto getResponsesForCustomer(Long tenantId, Long customerId) {
+    public AmlUserQuestionResponseDto getResponsesForCustomer(Long tenantId, Long userProfileId) {
 
-        tenantService.findTenantOrThrow(tenantId);
 
-        customerRepository.findById(customerId)
-                .orElseThrow(() -> ResourceNotFoundException.forEntity("Customer",customerId));
-
-        List<AmlQuestionResponse> response = responseRepository.findLatestResponsesByUserAndTenant(customerId, tenantId);
+        List<AmlQuestionResponse> response = responseRepository.findLatestResponsesByUserAndTenant(userProfileId, tenantId);
 
         List<QuestionAnswerDto> answers = response.stream()
                 .map(r -> QuestionAnswerDto.builder()
@@ -164,7 +158,7 @@ public class QuestionService {
 
         return AmlUserQuestionResponseDto.builder()
                 .answers(answers)
-                .customer(customerId)
+                .userProfileId(userProfileId)
                 .tenant(tenantId)
                 .build();
     }

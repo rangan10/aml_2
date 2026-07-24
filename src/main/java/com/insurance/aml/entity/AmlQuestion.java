@@ -65,6 +65,9 @@ public class AmlQuestion {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "version", nullable = false)
+    private Float version;
+
     @Builder.Default
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<AmlQuestionOption> options = new ArrayList<>();

@@ -5,9 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
-    <include file="db/changelog/changes/001-init-schema.sql" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/002-questionnaire-schema.sql" relativeToChangelogFile="false"/>
-    <include file="db/changelog/changes/aml_question_tenant.sql" relativeToChangelogFile="false"/>
 
     <include file="db/changelog/changes/003-seed-aml-questions.sql" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/004-seed-kshema-aml-questionnaire.sql" relativeToChangelogFile="false"/>

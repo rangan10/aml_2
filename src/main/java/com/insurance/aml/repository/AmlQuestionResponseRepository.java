@@ -20,7 +20,7 @@ public interface AmlQuestionResponseRepository extends JpaRepository<AmlQuestion
                        ORDER BY created_at DESC
                    ) rn
             FROM aml_question_response
-            WHERE user_id = :userId
+            WHERE user_profile_id = :userId
               AND tenant_id = :tenantId
         ) t
         WHERE rn = 1

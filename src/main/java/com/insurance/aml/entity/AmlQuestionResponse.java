@@ -33,13 +33,11 @@ public class AmlQuestionResponse {
     @Column(name = "question_response_id")
     private Long questionResponseId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private Customer user;
+    @Column(name = "user_profile_id", nullable = false)
+    private Long userProfileId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", nullable = false)
-    private Tenant tenant;
+    @Column(name = "tenant_id", nullable = false)
+    private Long tenantId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)

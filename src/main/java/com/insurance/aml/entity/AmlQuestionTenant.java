@@ -22,9 +22,8 @@ public class AmlQuestionTenant {
     @JoinColumn(name = "question_id")
     private AmlQuestion question;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id")
-    private Tenant tenant;
+    @Column(name = "tenant_id")
+    private Long tenantId;
 
     @Column(nullable = false)
     private Integer versionNo;

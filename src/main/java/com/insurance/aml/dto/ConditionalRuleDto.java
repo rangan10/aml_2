@@ -1,5 +1,6 @@
 package com.insurance.aml.dto;
 
+import com.insurance.aml.enums.ConditionalOperator;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

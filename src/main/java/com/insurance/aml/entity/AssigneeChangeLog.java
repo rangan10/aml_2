@@ -23,10 +23,6 @@ public class AssigneeChangeLog {
     @Column(name = "change_id")
     private Long changeId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "policy_id", nullable = false)
-    private Policy policy;
-
     @Column(name = "change_date", nullable = false)
     private LocalDateTime changeDate;
 
