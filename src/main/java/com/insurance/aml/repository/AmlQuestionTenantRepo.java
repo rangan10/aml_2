@@ -15,13 +15,13 @@ public interface AmlQuestionTenantRepo extends JpaRepository<AmlQuestionTenant,L
     @Query("""
     SELECT aqt.question
     FROM AmlQuestionTenant aqt
-    WHERE aqt.tenant.tenantId = :tenantId
+    WHERE aqt.tenantId = :tenantId
       AND aqt.question.questionCode = :questionCode
       AND aqt.active = true
       AND aqt.versionNo = (
           SELECT MAX(aqt2.versionNo)
           FROM AmlQuestionTenant aqt2
-          WHERE aqt2.tenant.tenantId = :tenantId
+          WHERE aqt2.tenantId = :tenantId
             AND aqt2.question.questionCode = :questionCode
       )
 """)
@@ -40,13 +40,13 @@ public interface AmlQuestionTenantRepo extends JpaRepository<AmlQuestionTenant,L
               SELECT 1
               FROM AmlQuestionTenant aqt
               WHERE aqt.question = q
-                AND aqt.tenant.tenantId = :tenantId
+                AND aqt.tenantId = :tenantId
                 AND aqt.active = true
                 AND aqt.versionNo = (
                     SELECT MAX(aqt2.versionNo)
                     FROM AmlQuestionTenant aqt2
                     WHERE aqt2.question = q
-                      AND aqt2.tenant.tenantId = :tenantId
+                      AND aqt2.tenantId = :tenantId
                 )
           )
       )

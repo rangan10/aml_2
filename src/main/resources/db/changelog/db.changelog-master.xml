@@ -9,10 +9,6 @@
 
     <include file="db/changelog/changes/003-seed-aml-questions.sql" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/004-seed-kshema-aml-questionnaire.sql" relativeToChangelogFile="false"/>
-    <include file="db/changelog/changes/005-questionnaire-tenant-many-to-many.sql" relativeToChangelogFile="false"/>
-    <include file="db/changelog/changes/006-add-question-category.sql" relativeToChangelogFile="false"/>
-    <include file="db/changelog/changes/007-reclassify-question-categories.sql" relativeToChangelogFile="false"/>
-    <include file="db/changelog/changes/008-per-tenant-questionnaire-versioning.sql" relativeToChangelogFile="false"/>
     <include file="db/changelog/changes/seed_aml_question_tenant.sql" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

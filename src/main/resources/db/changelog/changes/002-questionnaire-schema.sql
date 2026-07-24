@@ -30,16 +30,19 @@ CREATE INDEX idx_aml_question_category
 -- =====================================================
 -- AML QUESTION OPTION
 -- =====================================================
-
 CREATE TABLE aml_question_option (
     option_id BIGSERIAL PRIMARY KEY,
+
     question_id BIGINT NOT NULL,
+
     option_code VARCHAR(50) NOT NULL,
     option_label VARCHAR(200) NOT NULL,
     display_order INTEGER NOT NULL,
+
     active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_aml_question_option_question
         FOREIGN KEY (question_id)
@@ -49,7 +52,6 @@ CREATE TABLE aml_question_option (
     CONSTRAINT uk_question_option_code
         UNIQUE (question_id, option_code)
 );
-
 CREATE INDEX idx_aml_question_option_question
     ON aml_question_option(question_id);
 

@@ -29,57 +29,6 @@
 -- literal text "true"/"false".
 -- =====================================================================
 
--- ==================== 3. AML_QUESTION (tenant-specific, owned by KSHEMA) ====================
-INSERT INTO aml_question (
-    question_code,
-    question_text,
-    question_type,
-    question_scope
-)
-SELECT
-    v.question_code,
-    v.question_text,
-    v.question_type,
-    'TENANT_SPECIFIC'
-FROM (
-     VALUES
-        ('EMPLOYMENT_TYPE',               'What is your employment type?',                                        'SINGLE_CHOICE'),
-        ('COUNTRY_OF_RESIDENCE',          'What is your country of residence?',                                   'TEXT'),
-        ('NRI_FLAG',                      'Are you a Non-Resident Indian (NRI)?',                                 'BOOLEAN'),
-        ('PEP_FLAG',                      'Are you a Politically Exposed Person (PEP)?',                          'BOOLEAN'),
-        ('RELATED_TO_PEP',                'Are you related to a Politically Exposed Person (PEP)?',              'BOOLEAN'),
-        ('NGO_TRUST_AFFILIATION',         'Do you have any NGO or Trust affiliation?',                            'BOOLEAN'),
-        ('ANNUAL_INCOME',                 'What is your annual income?',                                          'NUMBER'),
-        ('SOURCE_OF_INCOME',              'What is your primary source of income?',                               'SINGLE_CHOICE'),
-        ('CURRENT_ADDRESS',               'What is your current address?',                                        'TEXT'),
-        ('PERMANENT_ADDRESS',             'What is your permanent address?',                                      'TEXT'),
-        ('PAN_NUMBER',                    'What is your PAN number?',                                             'TEXT'),
-        ('MOBILE_NUMBER',                 'What is your mobile number?',                                          'TEXT'),
-        ('EMAIL_ADDRESS',                 'What is your email address?',                                          'TEXT'),
-        ('CKYC_AVAILABLE',                'Is your CKYC record available?',                                       'BOOLEAN'),
-        ('CKYC_KIN_NUMBER',               'What is your CKYC KIN number?',                                        'TEXT'),
-        ('SUM_INSURED',                   'What is the sum insured for this policy?',                             'NUMBER'),
-        ('PREMIUM_AMOUNT',                'What is the premium amount for this policy?',                          'NUMBER'),
-        ('PAYMENT_MODE',                  'What is the mode of premium payment?',                                 'SINGLE_CHOICE'),
-        ('PREMIUM_PAYER_TYPE',            'Who is paying the premium for this policy?',                           'SINGLE_CHOICE'),
-        ('PAYER_NAME',                    'What is the payer''s name?',                                           'TEXT'),
-        ('PAYER_PAN',                     'What is the payer''s PAN number?',                                     'TEXT'),
-        ('RELATIONSHIP_TO_INSURED',       'What is the payer''s relationship to the insured?',                    'TEXT'),
-        ('HYPOTHECATION_STATUS',          'What is the hypothecation status of the insured asset?',               'SINGLE_CHOICE'),
-        ('NOMINEE_NAME',                  'What is the nominee''s name?',                                         'TEXT'),
-        ('NOMINEE_RELATIONSHIP',          'What is the nominee''s relationship to the insured?',                  'TEXT'),
-        ('ASSIGNEE_EXISTS',               'Does this policy have an assignee?',                                   'BOOLEAN'),
-        ('BENEFICIAL_OWNER_FLAG',         'Is there a beneficial owner other than the insured/proposer?',         'BOOLEAN'),
-        ('ULTIMATE_BENEFICIAL_OWNER_NAME','What is the name of the Ultimate Beneficial Owner (UBO)?',            'TEXT'),
-        ('FOREIGN_SOURCE_OF_FUNDS',       'Is the source of funds for this policy from a foreign country?',       'BOOLEAN'),
-        ('FOREIGN_COUNTRY',               'Which foreign country is the source of funds from?',                   'TEXT')
-) AS v(question_code, question_text, question_type)
-WHERE NOT EXISTS (
-    SELECT 1
-    FROM aml_question q
-    WHERE q.question_code = v.question_code
-);
-
 -- ==================== 4. AML_QUESTION_OPTION ====================
 INSERT INTO aml_question_option (
     question_id,
@@ -233,21 +182,57 @@ WHERE q.question_code = 'HYPOTHECATION_STATUS'
         AND qo.option_code = v.option_code
   );
 
--- ==================== 5. AML_TENANT_QUESTIONNAIRE (attaches questions to the questionnaire) ====================
--- Required by the schema: aml_question rows alone are not "in" a
--- questionnaire until mapped here, with mandatory/display_order/
--- conditional_rule carried per this tenant's configuration.
+INSERT INTO aml_question_option (question_id, option_code, option_label, display_order)
+SELECT question_id, v.option_code, v.option_label, v.display_order
+FROM aml_question,
+     (VALUES ('SALARY', 'Salary', 1),
+             ('BUSINESS_INCOME', 'Business Income', 2),
+             ('SAVINGS', 'Savings', 3),
+             ('INHERITANCE', 'Inheritance', 4),
+             ('SALE_OF_ASSET', 'Sale of Asset', 5),
+             ('LOAN', 'Loan', 6),
+             ('GIFT', 'Gift', 7),
+             ('OTHER', 'Other', 8)
+     ) AS v(option_code, option_label, display_order)
+WHERE question_code = 'AML003_SOURCE_OF_FUNDS';
 
-JOIN aml_question_tenant aqt
-    ON aqt.question_id = q.question_id
-   AND aqt.tenant_id = t.tenant_id
-   AND aqt.version_no = 1
-   AND aqt.active = TRUE
 
-WHERE t.tenant_code = 'KSHEMA'
-  AND NOT EXISTS (
-        SELECT 1
-        FROM aml_tenant_questionnaire existing
-        WHERE existing.questionnaire_id = qn.questionnaire_id
-          AND existing.question_id = q.question_id
-  );
+INSERT INTO aml_question_option (question_id, option_code, option_label, display_order)
+SELECT question_id, v.option_code, v.option_label, v.display_order
+FROM aml_question,
+     (VALUES ('CASH', 'Cash', 1),
+             ('DD', 'Demand Draft', 2),
+             ('CHEQUE', 'Cheque', 3),
+             ('NEFT_RTGS', 'NEFT / RTGS', 4),
+             ('UPI', 'UPI', 5),
+             ('CARD', 'Card', 6),
+             ('ONLINE_BANKING', 'Online Banking', 7)
+     ) AS v(option_code, option_label, display_order)
+WHERE question_code = 'AML004_PAYMENT_MODE';
+
+
+INSERT INTO aml_question_option (question_id, option_code, option_label, display_order)
+SELECT question_id, v.option_code, v.option_label, v.display_order
+FROM aml_question,
+     (VALUES ('SELF', 'Self', 1),
+             ('SPOUSE', 'Spouse', 2),
+             ('PARENT', 'Parent', 3),
+             ('CHILD', 'Child', 4),
+             ('EMPLOYER', 'Employer', 5),
+             ('FRIEND', 'Friend', 6),
+             ('OTHER', 'Other', 7)
+     ) AS v(option_code, option_label, display_order)
+WHERE question_code = 'AML018_PREMIUM_PAYER';
+
+INSERT INTO aml_question_option (question_id, option_code, option_label, display_order)
+SELECT question_id, v.option_code, v.option_label, v.display_order
+FROM aml_question,
+     (VALUES ('SELF', 'Self', 1),
+             ('SPOUSE', 'Spouse', 2),
+             ('PARENT', 'Parent', 3),
+             ('CHILD', 'Child', 4),
+             ('EMPLOYER', 'Employer', 5),
+             ('FRIEND', 'Friend', 6),
+             ('OTHER', 'Other', 7)
+     ) AS v(option_code, option_label, display_order)
+WHERE question_code = 'AML_POLICY_PURPOSE';

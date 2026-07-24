@@ -28,7 +28,7 @@ public interface AmlQuestionRepository extends JpaRepository<AmlQuestion, Long> 
     @Query("""
         SELECT aqt.question
         FROM AmlQuestionTenant aqt
-        WHERE aqt.tenant.tenantId = :tenantId
+        WHERE aqt.tenantId = :tenantId
           AND aqt.question.questionCode = :questionCode
           AND aqt.active = true
         ORDER BY aqt.versionNo DESC
@@ -40,7 +40,7 @@ public interface AmlQuestionRepository extends JpaRepository<AmlQuestion, Long> 
     @Query("""
         SELECT aqt.question
         FROM AmlQuestionTenant aqt
-        WHERE aqt.tenant.tenantId = :tenantId
+        WHERE aqt.tenantId = :tenantId
           AND aqt.active = true
     """)
     List<AmlQuestion> findByTenantId(
@@ -49,7 +49,7 @@ public interface AmlQuestionRepository extends JpaRepository<AmlQuestion, Long> 
     @Query("""
         SELECT aqt.question
         FROM AmlQuestionTenant aqt
-        WHERE aqt.tenant.tenantId = :tenantId
+        WHERE aqt.tenantId = :tenantId
           AND aqt.question.category = :category
           AND aqt.active = true
     """)
@@ -60,7 +60,7 @@ public interface AmlQuestionRepository extends JpaRepository<AmlQuestion, Long> 
     @Query("""
         SELECT aqt.question
         FROM AmlQuestionTenant aqt
-        WHERE aqt.tenant.tenantId = :tenantId
+        WHERE aqt.tenantId = :tenantId
           AND aqt.question.questionCode = :questionCode
           AND aqt.active = true
     """)
