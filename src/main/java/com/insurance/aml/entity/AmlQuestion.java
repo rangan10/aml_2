@@ -69,6 +69,9 @@ public class AmlQuestion {
     @Column(name = "version", nullable = false)
     private BigDecimal version;
 
+    @Column(name = "display_order", nullable = false)
+    private int displayOrder;
+
     @Builder.Default
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<AmlQuestionOption> options = new ArrayList<>();

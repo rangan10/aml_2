@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -45,7 +46,7 @@ public class QuestionService {
             questions.addAll(questionRepository.findByTenantId(tenantId));
         }
 
-        return questions.stream().map(this::toQuestionDto).toList();
+        return questions.stream().sorted(Comparator.comparing(AmlQuestion::getDisplayOrder)).map(this::toQuestionDto).toList();
     }
 
     private QuestionDto toQuestionDto(AmlQuestion question) {
@@ -71,6 +72,7 @@ public class QuestionService {
                 .category(question.getCategory())
                 .active(question.isActive())
                 .options(options)
+                .displayOrder(question.getDisplayOrder())
                 .build();
     }
 

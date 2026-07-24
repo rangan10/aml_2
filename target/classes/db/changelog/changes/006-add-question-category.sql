@@ -1,0 +1,84 @@
+--liquibase formatted sql
+
+--changeset rangan10:006-add-question-category
+-- =====================================================================
+-- AML Module Schema - 006
+-- Adds a category to every question bank entry (KYC / EMP / POLICY /
+-- QUOTATION) so callers can fetch just the questions relevant to a given
+-- stage (e.g. "give me all KYC questions").
+-- =====================================================================
+--
+--ALTER TABLE aml_question ADD COLUMN question_category VARCHAR(20);
+--
+---- Backfill existing questions (seeded in 003/004) with their category.
+--UPDATE aml_question q
+--SET question_category = v.category
+--FROM (VALUES
+--        -- AML rule-driven questions (003)
+--        ('AML003_SOURCE_OF_FUNDS',           'KYC'),
+--        ('AML003_SUM_INSURED_REASON',        'QUOTATION'),
+--        ('AML003_ADDRESS_MISMATCH_REASON',   'KYC'),
+--        ('AML004_PAYMENT_MODE',              'QUOTATION'),
+--        ('AML004_CASH_DD_REASON',            'QUOTATION'),
+--        ('AML005_FREELOOK_HISTORY',          'POLICY'),
+--        ('AML005_FREELOOK_REASON',           'POLICY'),
+--        ('AML006_REFUND_HISTORY',            'POLICY'),
+--        ('AML006_REFUND_DETAILS',            'POLICY'),
+--        ('AML007_CLAIM_HISTORY',             'POLICY'),
+--        ('AML007_CLAIM_DETAILS',             'POLICY'),
+--        ('AML008_ADDRESS_CHANGE_REASON',     'KYC'),
+--        ('AML010_DUPLICATE_IDENTITY',        'KYC'),
+--        ('AML011_ADVERSE_MEDIA_DECLARATION', 'KYC'),
+--        ('AML015_ASSET_HYPOTHECATION',       'POLICY'),
+--        ('AML017_DOCUMENTS_COMPLETE',        'KYC'),
+--        ('AML017_NOMINEE_CHANGE_REASON',     'POLICY'),
+--        ('AML017_ASSIGNEE_CHANGE_REASON',    'POLICY'),
+--        ('AML018_PREMIUM_PAYER',             'QUOTATION'),
+--        ('AML018_THIRD_PARTY_PAYER_REASON',  'QUOTATION'),
+--        ('AML019_MCA_DECLARATION',           'KYC'),
+--        ('AML_PEP_SELF_DECLARATION',         'KYC'),
+--        ('AML_PEP_FAMILY_DECLARATION',       'KYC'),
+--        ('AML_NRI_DECLARATION',              'KYC'),
+--        ('AML_POLICY_PURPOSE',               'QUOTATION'),
+--        -- KSHEMA tenant-specific questions (004)
+--        ('EMPLOYMENT_TYPE',                  'EMP'),
+--        ('COUNTRY_OF_RESIDENCE',             'KYC'),
+--        ('NRI_FLAG',                         'KYC'),
+--        ('PEP_FLAG',                         'KYC'),
+--        ('RELATED_TO_PEP',                   'KYC'),
+--        ('NGO_TRUST_AFFILIATION',            'KYC'),
+--        ('ANNUAL_INCOME',                    'KYC'),
+--        ('SOURCE_OF_INCOME',                 'KYC'),
+--        ('CURRENT_ADDRESS',                  'KYC'),
+--        ('PERMANENT_ADDRESS',                'KYC'),
+--        ('PAN_NUMBER',                       'KYC'),
+--        ('MOBILE_NUMBER',                    'KYC'),
+--        ('EMAIL_ADDRESS',                    'KYC'),
+--        ('CKYC_AVAILABLE',                   'KYC'),
+--        ('CKYC_KIN_NUMBER',                  'KYC'),
+--        ('SUM_INSURED',                      'QUOTATION'),
+--        ('PREMIUM_AMOUNT',                   'QUOTATION'),
+--        ('PAYMENT_MODE',                     'QUOTATION'),
+--        ('PREMIUM_PAYER_TYPE',               'QUOTATION'),
+--        ('PAYER_NAME',                       'QUOTATION'),
+--        ('PAYER_PAN',                        'QUOTATION'),
+--        ('RELATIONSHIP_TO_INSURED',          'QUOTATION'),
+--        ('HYPOTHECATION_STATUS',             'POLICY'),
+--        ('NOMINEE_NAME',                     'POLICY'),
+--        ('NOMINEE_RELATIONSHIP',             'POLICY'),
+--        ('ASSIGNEE_EXISTS',                  'POLICY'),
+--        ('BENEFICIAL_OWNER_FLAG',            'POLICY'),
+--        ('ULTIMATE_BENEFICIAL_OWNER_NAME',   'POLICY'),
+--        ('FOREIGN_SOURCE_OF_FUNDS',          'POLICY'),
+--        ('FOREIGN_COUNTRY',                  'POLICY')
+--     ) AS v(question_code, category)
+--WHERE q.question_code = v.question_code;
+--
+---- Safety net for any question not covered above (shouldn't happen today,
+---- but keeps the NOT NULL constraint below from failing on future seed data
+---- that forgets to set a category).
+--UPDATE aml_question SET question_category = 'KYC' WHERE question_category IS NULL;
+--
+--ALTER TABLE aml_question ALTER COLUMN question_category SET NOT NULL;
+--
+--CREATE INDEX idx_question_category ON aml_question(question_category);

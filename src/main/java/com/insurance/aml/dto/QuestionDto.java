@@ -3,6 +3,7 @@ package com.insurance.aml.dto;
 import com.insurance.aml.enums.QuestionCategory;
 import com.insurance.aml.enums.QuestionScope;
 import com.insurance.aml.enums.QuestionType;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,7 +14,6 @@ import java.util.List;
 
 /**
  * Question bank detail, as it appears standalone or nested inside a
- * {@link QuestionnaireDto}.
  */
 @Getter
 @Setter
@@ -37,6 +37,8 @@ public class QuestionDto {
     private QuestionCategory category;
 
     private boolean active;
+
+    private int displayOrder;
 
     private List<QuestionOptionDto> options;
 }
